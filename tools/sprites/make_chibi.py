@@ -384,6 +384,13 @@ def head(a, c, side):
             a.stroke([(-6, 9), (-2, 7), (3, 7)], c['hairL'])
         else:
             a.clip(hm, [('e', -8, 8.4, 6, 11.6)], c['hairL'], 0.45, blur=0.6)
+        if isinstance(a, Pixel):  # 鼻筋から下は、顔より前に髪の輪郭を残さない（鼻の出っ張りを見せる）
+            line = set(FACE_SIDE_LINE)
+            for Y in range(26, 36):
+                f = -13 if Y == 26 else FACE_SIDE[Y][0] if Y in FACE_SIDE else 99  # 26行は前髪の毛先が −13 まで
+                for x in range(-16, min(f, 4)):
+                    if (x, Y) not in line:
+                        a.im.putpixel((CX + x, Y), (0, 0, 0, 0))
         eye(a, c, -6, side=True)  # 目の前端は x −8（鼻筋から肌4ドット後ろ）
         if girl:
             a.blob(-11.6, 29.8, -8.4, 31.4, c['blush'], 0.45, 0.6)
