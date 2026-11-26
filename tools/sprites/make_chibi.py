@@ -668,11 +668,62 @@ def ear_side(im, c):
                 px[X, Y] = tuple(pal[ch][:3]) + (255,)
 
 
+def back_frame(c, step):
+    """後ろ向きは back_tables.py の表（手本を1ドットずつ書き起こしたもの）から描く。色はキャラごとに置き換える"""
+    import back_tables as bt
+    def mix(c1, c2, t):
+        return tuple(round(c1[i] * (1 - t) + c2[i] * t) for i in range(3))
+    girl = c['girl']
+    hair = [rgb(h) for h in HAIR_TONES] if girl else \
+        [rgb('#7d8396'), tuple(c['hairL'][:3]), tuple(c['hair1'][:3]), rgb('#2a2c36'), tuple(c['hair2'][:3])]
+    l1, l2 = tuple(c['low1'][:3]), tuple(c['low2'][:3])
+    s1, s2 = tuple(c['shoe1'][:3]), tuple(c['shoe2'][:3])
+    pal = {'#': c['line'], 'H': hair[0], 'L': hair[1], 'M': hair[2], 'D': hair[3], 'E': hair[4],
+           '1': c['skin1'], '2': c['skin2'], '3': c['skinS'], '4': c['handO'], 'h': c['handO'],
+           'T': c['top1'], 'U': c['top2'], 'V': c['topLine'],
+           'Q': mix(l1, (255, 255, 255), 0.3), 'q': l1, 'p': l2, 'P': mix(l2, (0, 0, 0), 0.3),
+           'S': s1, 's': mix(s1, s2, 0.5), 'd': s2, 'o': mix(s2, (0, 0, 0), 0.35)}
+    if not girl:  # ハルは長ズボン：足元の肌の部分はズボンの色
+        pass
+    top, rows = (bt.BACK_GIRL if girl else bt.BACK_BOY)[step]
+    im = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
+    for j, row in enumerate(rows):
+        Y = top + j
+        for X, ch in enumerate(row):
+            if ch == '_':
+                continue
+            col = pal[ch]
+            if not girl and Y >= 44 and ch in '1234':  # 手本の男子は素足、ハルは長ズボン
+                col = l1 if ch in '12' else l2
+            im.putpixel((X, Y), tuple(col[:3]) + (255,))
+    if girl:  # 手本の女子のカチューシャはユイにはないので、頭の上を男子と同じ丸いドームの幅に削り、上の縁を暗い髪色に
+        o = top - 5   # 歩きのコマは1ドット下がっている
+        hw = {5 + o: 5, 6 + o: 8, 7 + o: 10, 8 + o: 11}
+        for Y in range(0, 9 + o):
+            for X in range(FW):
+                if abs(X - CX) > hw.get(Y, -1):
+                    im.putpixel((X, Y), (0, 0, 0, 0))
+        for X in range(FW):
+            for Y in range(0, 12 + o):
+                if im.getpixel((X, Y))[3] > 128:
+                    im.putpixel((X, Y), tuple(hair[4][:3]) + (255,))
+                    break
+        # リボン（正面では右上。後ろからは左上に見える）
+        rb = {'r': tuple(c['ribbon1'][:3]), 'R': tuple(c['ribbon2'][:3])}
+        for j, row in enumerate(['.r.r', 'rRRr', '.r.r']):
+            for i, ch in enumerate(row):
+                if ch != '.':
+                    im.putpixel((CX - 10 + i, 8 + o + j), rb[ch] + (255,))
+    return im
+
+
 Art = Pixel  # 塗り方：Pixel（くっきりしたドット絵）／Chibi（イラストを縮めた柔らかい塗り）
 
 
 def frame(ch, d, step):
     c = colors(ch)
+    if d == 'up' and Art is Pixel:
+        return back_frame(c, step)
     side = 'left' if d in ('left', 'right') else d
     a = Art()
     body(a, c, side, step, side == 'up')
