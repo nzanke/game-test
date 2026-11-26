@@ -136,7 +136,7 @@
 
   // ---------------- 画像 ----------------
   // 版の番号（index.html の ?v=…）。画像も古いものを使い回さないよう、この番号をつけて読む
-  G.ver = ((document.currentScript && document.currentScript.src.match(/[?&]v=([^&]+)/)) || [])[1] || '';
+  G.ver = ((typeof document !== 'undefined' && document.currentScript && document.currentScript.src.match(/[?&]v=([^&]+)/)) || [])[1] || '';
   G.url = (src) => (G.ver && !/^(https?:|data:|blob:)/.test(src) ? src + (src.includes('?') ? '&' : '?') + 'v=' + G.ver : src);
   G.images = {};
   G.img = function (src) {
