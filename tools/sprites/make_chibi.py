@@ -136,17 +136,17 @@ def body(a, c, side, step, back):
         a.part([('p', [(-6.8, 32.6), (-4, 32.6), (-5.2, 35.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         return
     la, ra = lift
-    for x0, x1, l in ((-7, -0.6, la), (0.6, 7, ra)):  # 足
+    for x0, x1, l in ((-6.2, -0.6, la), (0.6, 6.2, ra)):  # 足
         a.part([('e', x0, 43.2 - l, x1, 47.2 - l)], c['shoe1'], c['shoe2'], light=(210, 180, 160), line=c['line'], lw=0.7, la=0.6)
     if girl:
-        a.part([('p', [(-8, 38.2), (8, 38.2), (9.8, 44.6), (-9.8, 44.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        a.part([('p', [(-6.4, 38.2), (6.4, 38.2), (7.8, 44.6), (-7.8, 44.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     else:
-        for x0, x1, l in ((-6.6, -0.4, la), (0.4, 6.6, ra)):
+        for x0, x1, l in ((-6, -0.4, la), (0.4, 6, ra)):
             a.part([('p', [(x0, 39), (x1, 39), (x1, 44.4 - l), (x0, 44.4 - l)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     for s in (-1, 1):  # 腕
-        a.part([('p', [(s * 5.4, 33), (s * 7.8, 33.4), (s * 11.4, 39.4), (s * 9, 40.4)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
-        a.part([('e', s * 10.6 - 2, 38.6, s * 10.6 + 2, 42.4)], c['skin1'], c['skin2'], line=c['skinLine'], lw=0.5)
-    m = a.part([('p', [(-5.6, 32.4), (5.6, 32.4), (8.4, 40.6), (-8.4, 40.6)])], c['top1'], c['top2'], shade=c['top2'], light=(255, 252, 240), line=c['topLine'], lw=0.7)
+        a.part([('p', [(s * 4.8, 33), (s * 7, 33.4), (s * 10.8, 39.4), (s * 8.4, 40.4)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
+        a.part([('e', s * 10.2 - 2, 38.6, s * 10.2 + 1.8, 42.4)], c['skin1'], c['skin2'], line=c['skinLine'], lw=0.5)
+    m = a.part([('p', [(-5, 32.4), (5, 32.4), (7.4, 40.6), (-7.4, 40.6)])], c['top1'], c['top2'], shade=c['top2'], light=(255, 252, 240), line=c['topLine'], lw=0.7)
     if not back:
         if girl:
             a.clip(m, [('p', [(-1.6, 32.4), (1.6, 32.4), (1.4, 40.4), (-1.4, 40.4)])], c['inner'], 1.0)
@@ -155,7 +155,7 @@ def body(a, c, side, step, back):
             a.clip(m, [('r', -0.2, 35.4, 0.2, 40)], c['topLine'], 0.7)
         a.part([('p', [(-2.4, 32.4), (0, 34), (2.4, 32.4), (1.8, 35.8), (0, 34.8), (-1.8, 35.8)])], c['ribbon1'], c['ribbon2'], lw=0.4) if girl else None
     if not girl:
-        a.part([('r', -8, 39.4, 8, 40.8)], c['ribbon1'], c['ribbon2'], lw=0.4)  # ベルト
+        a.part([('r', -7.2, 39.4, 7.2, 40.8)], c['ribbon1'], c['ribbon2'], lw=0.4)  # ベルト
 
 
 # ---------------- 頭（大きく、前髪は目のすぐ上まで、目は大きく下寄り） ----------------
@@ -228,8 +228,8 @@ def head(a, c, side):
             a.part([('p', [(1, 14), (15.6, 14), (15, 36), (9, 38.6), (3, 33)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         hm = a.part([('e', -14.2, 7 if girl else 6.4, 14.6, 33)], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         fm = a.part([('e', -15.4, 15.6, 3.6, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
-        a.clip(fm, [('r', -16, 20, 4, 24.4)], c['skinS'], 0.5, blur=0.8)
-        bangs(a, c, -15.2, 3, [(-15.6, -11.6, 25), (-12.4, -8.4, 24), (-9, -5, 25.2), (-5.6, -1.6, 23.6), (-2, 2.6, 24.4)], face=fm)
+        a.clip(fm, [('r', -16, 20, 4, 22.6)], c['skinS'], 0.5, blur=0.8)
+        bangs(a, c, -15.2, 3, [(-15.6, -11.6, 23.6), (-12.4, -8.4, 22.8), (-9, -5, 23.8), (-5.6, -1.6, 22.6), (-2, 2.6, 23.4)], base=20.8, face=fm)
         sideline = None if isinstance(a, Pixel) else c['hairLine']
         sm = a.part([('p', [(4.6, 14), (14.4, 14), (14, 28.4), (8.6, 32.4), (5.6, 26)])], c['hair1'], c['hair2'], shade=None if isinstance(a, Pixel) else c['hair2'], line=sideline, lw=0.7)
         if isinstance(a, Pixel):
@@ -254,9 +254,9 @@ def head(a, c, side):
     if not girl:
         a.part([('p', [(-11, 10), (-13, 6.4), (-6, 8)]), ('p', [(-2, 7.4), (0, 3.6), (2.4, 7.2)]), ('p', [(8, 9), (13, 6.6), (12, 12)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
     fm = a.part([('e', -10.4, 15.6, 10.4, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], sh=(1.2, 1.4), sb=1.0, line=c['skinLine'], lw=0.6)
-    a.clip(fm, [('r', -11, 20, 11, 24.4)], c['skinS'], 0.5, blur=0.8)
-    tips = [(-12, -7.6, 25.4), (-8.4, -4, 24.2), (-4.6, -0.2, 25.6), (-0.8, 3.6, 23.8), (3, 7.4, 25), (6.8, 11.6, 25.8)]
-    bm = bangs(a, c, -12.4, 12.4, tips, face=fm)
+    a.clip(fm, [('r', -11, 20, 11, 22.6)], c['skinS'], 0.5, blur=0.8)
+    tips = [(-12, -7.6, 23.6), (-8.4, -4, 22.8), (-4.6, -0.2, 23.8), (-0.8, 3.6, 22.6), (3, 7.4, 23.4), (6.8, 11.6, 23.8)]  # 毛先は目の上で止める
+    bm = bangs(a, c, -12.4, 12.4, tips, base=20.8, face=fm)
     if girl:
         for s in (-1, 1):  # 顔の横の髪（女子だけ、細め）
             a.part([('p', [(s * 15.4, 16), (s * 11.8, 16), (s * 11.4, 30), (s * 12.8, 33), (s * 15, 26)])], c['hair1'] if s < 0 else c['hair2'], c['hair2'], line=c['hairLine'], lw=0.6)
