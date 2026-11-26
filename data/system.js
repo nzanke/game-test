@@ -1,7 +1,7 @@
 // system.js — ゲーム全体の設定
 G.defineSystem({
-  title: 'ゲームテスト',
-  subtitle: '自作エンジンの動作確認用',
+  title: '放課後の教室',
+  subtitle: 'ひと部屋の脱出ゲーム',
   // タイトル画面の下に出す表示（素材の著作権表示など）
   credits: ['タイル素材：ドット絵世界'],
   // 画面の配置（画面は816×624）。map：地図の枠、message：文章の枠、portrait：立ち絵の枠、gauge：右端のゲージ
@@ -9,22 +9,23 @@ G.defineSystem({
   layout: {
     map: { x: 14, y: 14, w: 518, h: 432 },
     message: { x: 14, y: 456, w: 518, h: 156 },
-    portrait: { x: 440, y: 0, w: 330, h: 624, default: 'ユイ' },  // default：だれも話していないときに出す人
-    gauge: { x: 787, y: 12, h: 604, var: 'affection', max: 100 },  // var の変数の値だけ満ちる
+    portrait: { x: 440, y: 0, w: 330, h: 624, default: 'かなで' },  // default：だれも話していないときに出す人
+    gauge: { x: 787, y: 12, h: 604, var: 'clues', max: 3 },  // var の変数の値だけ満ちる（見つけた手がかりの数）
   },
   // 立ち絵。img に画像（下そろえで枠の高さに合わせる）を書く。img がないと仮の人影
   portraits: {
-    'ユイ': { color: '#c9617a' /* , img: 'img/portraits/yui.png' */ },
+    'ぼたん': { color: '#d99da6' },
+    'かなで': { color: '#8a7a95' },
   },
   // 最初にいる場所
-  start: { map: 'room1', x: 2, y: 6, dir: 'up' },
+  start: { map: 'escape', x: 7, y: 4, dir: 'right' },
   // 主人公
-  player: { name: 'ハル', char: { sprite: 'img/chars/haru_chibi.png' } },
+  player: { name: 'ぼたん', char: { sprite: 'img/chars/botan_chibi.png' } },
   // セーブ（ブラウザに保存）
   saveKey: 'game-test',
   saveSlots: 3,
   // メニューに並べる項目（{ label, common } でコモンイベントを呼ぶ項目も足せる）
-  menu: ['items', 'cards', 'log', 'save', 'load', 'title'],
+  menu: ['items', 'log', 'save', 'load', 'title'],
   // Qキー（スマホは★）で呼ぶコモンイベント
   specialKey: 'hint',
   // 近くの調べられるものを「！」で知らせる（false で無効）
