@@ -597,7 +597,7 @@ def head(a, c, side):
         eye(a, c, -6, side=True)  # 目の前端は x −8（鼻筋から肌4ドット後ろ）
         if girl:
             if c.get('cheek', True):
-                a.blob(-11.6, 29.8, -8.4, 31.4, c['blush'], 0.45, 0.6)
+                a.blob(-11.6, 30.8, -8.4, 32.4, c['blush'], 0.45, 0.6)
         if girl and c.get('hairclip', True):
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         extras(a, c, 'left')
@@ -626,8 +626,8 @@ def head(a, c, side):
     eye(a, c, 6, flip=True)
     if girl:
         if c.get('cheek', True):
-            a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
-            a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
+            a.blob(-8.6, 30.8, -4.8, 32.4, c['blush'], 0.45, 0.6)   # 頬の赤みは鼻（31行）と同じ高さに並べる
+            a.blob(4.8, 30.8, 8.6, 32.4, c['blush'], 0.45, 0.6)
     a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口はふつう省く（mouth の設定があるときだけ描く）
     if girl and c.get('hairclip', True):
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
