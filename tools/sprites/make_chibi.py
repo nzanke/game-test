@@ -100,13 +100,13 @@ CHARS = {
         'low1': '#8e93a6', 'low2': '#4f5366', 'leg': '#2a2730', 'shoe1': '#7a5a4c', 'shoe2': '#2e201c',
     }),
     # ---- 試し：設定（色）だけで足した新しいキャラ。ゲームにはまだ使っていない
-    'mio_chibi': dict(BASE, girl=True, tones=['#f2c79a', '#c98a52', '#9a5f34', '#704122', '#4a2814'], **{
+    'mio_chibi': dict(BASE, girl=True, eye='tare', tones=['#f2c79a', '#c98a52', '#9a5f34', '#704122', '#4a2814'], **{
         'hair1': '#9a5f34', 'hair2': '#4a2814', 'hairL': '#c98a52', 'hairLine': '#2e180c',
         'iris1': '#1f6a4a', 'iris2': '#3aa070', 'iris3': '#a8e8c4',
         'top1': '#2c3550', 'top2': '#1c2238', 'topLine': '#10131f', 'inner': '#ffffff', 'ribbon1': '#3f7fd0', 'ribbon2': '#1d4a86',
         'low1': '#2c3550', 'low2': '#1c2238', 'leg': '#2a2730', 'shoe1': '#5a3a2c', 'shoe2': '#24160e',
     }),
-    'sota_chibi': dict(BASE, girl=False, **{
+    'sota_chibi': dict(BASE, girl=False, eye='tsuri', **{
         'hair1': '#a87a4a', 'hair2': '#5a3a1e', 'hairL': '#d0a470', 'hairLine': '#2e1c0c',
         'iris1': '#1d3f7a', 'iris2': '#3a6ec0', 'iris3': '#a8c8f0',
         'top1': '#2a2a32', 'top2': '#16161c', 'topLine': '#0a0a0e', 'inner': '#ffffff', 'ribbon1': '#c8a040', 'ribbon2': '#c8a040',
@@ -287,11 +287,24 @@ EYE_SIDE = ['ooooo.',
             '.LLw..']
 
 
+# 目の型（キャラごとに eye='tare' などで選ぶ。無ければ今のハル・ユイの目）。正面は左の目（外側が左）、横向きは前が左
+EYE_TYPES = {
+    # たれ目：目尻のまつげが1段下がり、下側が丸い。やさしい印象
+    'tare': (['.EEEE', 'EgiiE', 'wiPiw', 'wIPIw', '.KKK.'],
+             ['oooo..', 'oEEooo', '.IEggo', '.EDwgE', '.EIwg4', '.LLw..']),
+    # つり目：目尻のまつげが上がり、縦に1段細い。きりっとした印象
+    'tsuri': (['EE...', '.EEEE', 'giPiw', 'wIPIw', '.KKK.'],
+              ['oooooE', 'oEEoE.', '.IEgg4', '.EDwg4', '.LLw..', '......']),
+}
+
+
 def eye(a, c, cx, flip=False, side=False):
     if isinstance(a, Pixel):
-        rows = EYE_GIRL if c['girl'] else EYE_BOY
+        kind = EYE_TYPES.get(c.get('eye'))
+        rows = kind[0] if kind else EYE_GIRL if c['girl'] else EYE_BOY
         if side:  # 横向き：手本を1ドットずつ測った作り（EYE_SIDE）。女子は目尻の列が髪にかかるので描かない
-            rows = [r[:-1] + '.' for r in EYE_SIDE] if c['girl'] else EYE_SIDE
+            srows = kind[1] if kind else EYE_SIDE
+            rows = [r[:-1] + '.' for r in srows] if c['girl'] else srows
             a.dots(-9, 24, rows, {'o': c['earO'], 'E': c['lash'], 'D': c['iris1'], 'I': c['iris2'], 'L': c['iris3'],
                                    'w': (255, 255, 255), 'g': (196, 190, 200), '4': c['handO']})
             return
@@ -482,7 +495,8 @@ def head(a, c, side):
                         a.im.putpixel((CX + x, Y), (0, 0, 0, 0))
         eye(a, c, -6, side=True)  # 目の前端は x −8（鼻筋から肌4ドット後ろ）
         if girl:
-            a.blob(-11.6, 29.8, -8.4, 31.4, c['blush'], 0.45, 0.6)
+            if c.get('cheek', True):
+                a.blob(-11.6, 29.8, -8.4, 31.4, c['blush'], 0.45, 0.6)
         if girl:
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         if not girl:
@@ -507,8 +521,9 @@ def head(a, c, side):
     eye(a, c, -6, flip=False)   # 左目 x -8..-4、右目 4..8（目の間7ドット）
     eye(a, c, 6, flip=True)
     if girl:
-        a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
-        a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
+        if c.get('cheek', True):
+            a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
+            a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
     a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口は省く
     if girl:
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
