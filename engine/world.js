@@ -369,20 +369,23 @@
 
     // ---------------- 描画 ----------------
     // 画面の左上が、マップのどこにあたるか（小さいマップは中央に置く）
-    camera() {
+    camera(VW = G.W, VH = G.H) {
       const p = this.player, mw = this.mw * T, mh = this.mh * T;
-      const cx = mw <= G.W ? -(G.W - mw) / 2 : Math.max(0, Math.min(mw - G.W, p.rx + T / 2 - G.W / 2));
-      const cy = mh <= G.H ? -(G.H - mh) / 2 : Math.max(0, Math.min(mh - G.H, p.ry + T / 2 - G.H / 2));
+      const cx = mw <= VW ? -(VW - mw) / 2 : Math.max(0, Math.min(mw - VW, p.rx + T / 2 - VW / 2));
+      const cy = mh <= VH ? -(VH - mh) / 2 : Math.max(0, Math.min(mh - VH, p.ry + T / 2 - VH / 2));
       return [Math.round(cx), Math.round(cy)];
     },
     draw(ctx) {
       const sh = this.fx.shake;
       const ox = sh ? Math.round(Math.sin(sh.t * 1.8) * sh.power * (1 - sh.t / sh.dur)) : 0;
-      const [cx, cy] = this.camera();
+      const V = G.box('map'); // 地図を映す枠
+      const [cx, cy] = this.camera(V.w, V.h);
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, G.W, G.H);
       ctx.save();
-      ctx.translate(ox - cx, -cy);
+      G.roundRect(ctx, V.x, V.y, V.w, V.h, 10);
+      ctx.clip();
+      ctx.translate(V.x + ox - cx, V.y - cy);
       ctx.drawImage(this.mapCanvas, 0, 0);
       const bg = G.img(this.map.bg);
       if (bg) ctx.drawImage(bg, 0, 0, G.W, G.H);
@@ -395,19 +398,30 @@
       this.drawSensor(ctx);
       for (const o of list) if (o.c.balloon) drawBalloon(ctx, o.c);
       ctx.restore();
+      // 色調・フラッシュは地図の枠の中だけ
       ctx.save();
-      ctx.translate(ox, 0);
-      this.drawPics(ctx);
-      ctx.restore();
+      G.roundRect(ctx, V.x, V.y, V.w, V.h, 10);
+      ctx.clip();
       const t = this.S.tint;
-      if (t[3] > 0) { ctx.fillStyle = `rgba(${t[0] | 0},${t[1] | 0},${t[2] | 0},${t[3]})`; ctx.fillRect(0, 0, G.W, G.H); }
+      if (t[3] > 0) { ctx.fillStyle = `rgba(${t[0] | 0},${t[1] | 0},${t[2] | 0},${t[3]})`; ctx.fillRect(V.x, V.y, V.w, V.h); }
       const fl = this.fx.flash;
       if (fl) {
         const [r, g, b, a = 1] = fl.color;
         ctx.fillStyle = `rgba(${r},${g},${b},${a * (1 - fl.t / fl.dur)})`;
-        ctx.fillRect(0, 0, G.W, G.H);
+        ctx.fillRect(V.x, V.y, V.w, V.h);
       }
-      if (this.fx.fade > 0) { ctx.fillStyle = `rgba(0,0,0,${this.fx.fade})`; ctx.fillRect(0, 0, G.W, G.H); }
+      if (this.fx.fade > 0) { ctx.fillStyle = `rgba(0,0,0,${this.fx.fade})`; ctx.fillRect(V.x, V.y, V.w, V.h); }
+      ctx.restore();
+      // 地図の枠の白い縁
+      if (G.data.system.layout) {
+        G.roundRect(ctx, V.x, V.y, V.w, V.h, 10);
+        ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+      }
+      // ピクチャは画面全体に（揺れはつける）
+      ctx.save();
+      ctx.translate(ox, 0);
+      this.drawPics(ctx);
+      ctx.restore();
     },
     // 近くに調べられるものがあると「！」で知らせる
     drawSensor(ctx) {

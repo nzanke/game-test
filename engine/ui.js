@@ -3,21 +3,31 @@
 (function () {
   const G = window.G;
   const W = () => G.world;
-  const MSG_Y = G.H - 168, MSG_H = 160, LINE = 38, PAD = 24;
+  // 画面の配置（system.js の layout。書いていない枠は全画面の配置になる）
+  G.box = function (name) {
+    const L = G.data.system.layout || {};
+    const def = { map: { x: 0, y: 0, w: G.W, h: G.H }, message: { x: 8, y: G.H - 168, w: G.W - 16, h: 160 } };
+    return L[name] || def[name] || null;
+  };
+  const LINE = 34, PAD = 20, PER_PAGE = 3;
 
   // ---------------- 文章 ----------------
+  // 名前は枠の中の1行目。本文は3行ずつページを送る
   G.msg = {
-    active: false, hidden: false, holdForChoice: false, lines: [], shown: 0, total: 0,
+    active: false, hidden: false, holdForChoice: false, lines: [], page: 0, shown: 0,
     show(name, text) {
-      Object.assign(this, { active: true, hidden: false, holdForChoice: false, name, text, shown: 0 });
+      Object.assign(this, { active: true, hidden: false, holdForChoice: false, name, text, shown: 0, page: 0 });
       G.ctx.font = G.font(26);
-      this.lines = G.wrap(G.ctx, text, G.W - 16 - PAD * 2);
-      this.total = this.lines.join('').length;
+      this.lines = G.wrap(G.ctx, text, G.box('message').w - PAD * 2);
       const log = W().S.log;
       log.push({ name, text });
       if (log.length > 300) log.shift();
     },
-    typingDone() { return this.shown >= this.total; },
+    pages() { return Math.max(1, Math.ceil(this.lines.length / PER_PAGE)); },
+    pageLines() { return this.lines.slice(this.page * PER_PAGE, this.page * PER_PAGE + PER_PAGE); },
+    pageTotal() { return this.pageLines().join('').length; },
+    pageDone() { return this.shown >= this.pageTotal(); },
+    typingDone() { return this.page >= this.pages() - 1 && this.pageDone(); },
     close() { this.active = false; this.holdForChoice = false; },
     update() {
       if (!this.active) return;
@@ -31,35 +41,43 @@
       if (inp.trigger('hide')) { this.hidden = true; return; }
       if (G.choice.active) return;
       if (inp.trigger('log')) { G.logView.open(); return; }
-      if (!this.typingDone()) {
-        if (inp.trigger('ok')) { this.shown = this.total; inp.consume('ok'); }
-        else this.shown = Math.min(this.total, this.shown + (inp.isDown('dash') ? 4 : 1));
+      if (!this.pageDone()) {
+        if (inp.trigger('ok')) { this.shown = this.pageTotal(); inp.consume('ok'); }
+        else this.shown = Math.min(this.pageTotal(), this.shown + (inp.isDown('dash') ? 4 : 1));
+        return;
+      }
+      if (this.page < this.pages() - 1) {
+        if (inp.trigger('ok')) { inp.consume('ok'); this.page++; this.shown = 0; }
         return;
       }
       if (this.holdForChoice) return;
       if (inp.trigger('ok') || inp.trigger('cancel')) { inp.consume('ok'); inp.consume('cancel'); this.close(); }
     },
     draw(ctx) {
+      const B = G.box('message');
+      G.drawFrame(ctx, B);
       if (!this.active || this.hidden) return;
-      G.drawWindow(ctx, 8, MSG_Y, G.W - 16, MSG_H);
-      if (this.name) {
-        ctx.font = G.font(24, true);
-        const w = ctx.measureText(this.name).width + 40;
-        G.drawWindow(ctx, 8, MSG_Y - 52, w, 46);
-        G.text(ctx, this.name, 28, MSG_Y - 41, 24, '#ffe9a8', 'left', true);
-      }
+      let y = B.y + 14;
+      if (this.name) { G.text(ctx, '【' + this.name + '】', B.x + PAD - 6, y, 22, '#ffe9a8', 'left', true); }
+      y += 32;
       let left = this.shown;
-      this.lines.slice(0, 3).forEach((ln, i) => {
+      this.pageLines().forEach((ln, i) => {
         if (left <= 0) return;
-        G.text(ctx, ln.slice(0, left), 8 + PAD, MSG_Y + 20 + i * LINE, 26);
+        G.text(ctx, ln.slice(0, left), B.x + PAD, y + i * LINE, 26);
         left -= ln.length;
       });
-      if (this.typingDone() && !this.holdForChoice && G.frame % 40 < 28) {
-        const x = G.W / 2, y = MSG_Y + MSG_H - 18;
+      if (this.pageDone() && !(this.holdForChoice && this.typingDone()) && G.frame % 40 < 28) {
+        const x = B.x + B.w - 26, yy = B.y + B.h - 16;
         ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.moveTo(x - 8, y - 6); ctx.lineTo(x + 8, y - 6); ctx.lineTo(x, y + 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x - 8, yy - 6); ctx.lineTo(x + 8, yy - 6); ctx.lineTo(x, yy + 2); ctx.fill();
       }
     },
+  };
+  // 枠（黒地に白い縁）
+  G.drawFrame = function (ctx, B, fill = 'rgba(0,0,0,0.92)') {
+    G.roundRect(ctx, B.x, B.y, B.w, B.h, 10);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
   };
 
   // ---------------- 選択肢 ----------------
@@ -79,13 +97,13 @@
     },
     draw(ctx) {
       if (!this.active || G.msg.hidden) return;
+      const M = G.box('map'), B = G.box('message');
       ctx.font = G.font(24);
       const w = Math.max(160, ...this.opts.map((o) => ctx.measureText(o).width)) + 64;
       const h = this.opts.length * 44 + 20;
-      let x = this.pos === 'center' ? (G.W - w) / 2 : this.pos === 'left' ? 8 : G.W - w - 8;
-      let y = G.msg.active ? MSG_Y - h - 8 : (G.H - h) / 2;
-      if (this.pos === 'center' && !G.msg.active) y = (G.H - h) / 2;
-      G.drawWindow(ctx, x, y, w, h);
+      const x = this.pos === 'center' ? M.x + (M.w - w) / 2 : this.pos === 'left' ? M.x + 8 : M.x + M.w - w - 8;
+      const y = G.msg.active ? Math.min(B.y, M.y + M.h) - h - 8 : M.y + (M.h - h) / 2;
+      G.drawWindow(ctx, x, y, w, h, 0.95);
       this.opts.forEach((o, i) => {
         if (i === this.index) {
           G.roundRect(ctx, x + 8, y + 10 + i * 44, w - 16, 42, 6);
@@ -93,6 +111,71 @@
         }
         G.text(ctx, o, x + 32, y + 19 + i * 44, 24);
       });
+    },
+  };
+
+  // ---------------- 立ち絵とゲージ ----------------
+  G.hud = {
+    // 立ち絵：話している人に立ち絵があればその人、なければ layout.portrait.default の人
+    draw(ctx) {
+      const P = G.box('portrait');
+      if (P) {
+        const ports = G.data.system.portraits || {};
+        const who = (G.msg.active && ports[G.msg.name]) ? G.msg.name : P.default;
+        const pt = ports[who];
+        if (pt) this.drawPortrait(ctx, P, pt, who);
+      }
+      const g = G.box('gauge');
+      if (g) this.drawGauge(ctx, g);
+    },
+    drawPortrait(ctx, P, pt, who) {
+      const im = G.img(pt.img);
+      if (im) { // 画像は枠の高さに合わせ、下そろえ・左右中央
+        const k = Math.min(P.h / im.height, P.w / im.width);
+        const w = im.width * k, h = im.height * k;
+        ctx.drawImage(im, P.x + (P.w - w) / 2, P.y + P.h - h, w, h);
+        return;
+      }
+      // 仮の立ち絵（人影）
+      const cx = P.x + P.w / 2, top = P.y + P.h * 0.08;
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = pt.color || '#888';
+      ctx.beginPath(); ctx.arc(cx, top + P.h * 0.12, P.h * 0.11, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx - P.w * 0.2, top + P.h * 0.26);
+      ctx.lineTo(cx + P.w * 0.2, top + P.h * 0.26);
+      ctx.lineTo(cx + P.w * 0.36, P.y + P.h);
+      ctx.lineTo(cx - P.w * 0.36, P.y + P.h);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+      G.text(ctx, '立ち絵（仮）', cx, top + P.h * 0.45, 20, '#fff', 'center', true);
+      G.text(ctx, who, cx, top + P.h * 0.45 + 30, 26, '#fff', 'center', true);
+      ctx.restore();
+    },
+    // 縦のゲージ：上にハート、下に丸。変数の値（0〜max）だけ下から満ちる
+    drawGauge(ctx, g) {
+      const S = W().S;
+      const v = Math.max(0, Math.min(1, ((S && S.vars[g.var]) || 0) / (g.max || 100)));
+      const cx = g.x, top = g.y + 34, bottom = g.y + g.h - 18, col = g.color || '#f07c8e';
+      ctx.save();
+      ctx.lineWidth = 3; ctx.strokeStyle = col;
+      // 管
+      G.roundRect(ctx, cx - 7, top, 14, bottom - top, 7);
+      ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fill(); ctx.stroke();
+      const fh = (bottom - top - 6) * v;
+      if (fh > 0) { G.roundRect(ctx, cx - 4, bottom - 3 - fh, 8, fh, 4); ctx.fillStyle = col; ctx.fill(); }
+      // 下の丸
+      ctx.beginPath(); ctx.arc(cx, bottom + 2, 14, 0, Math.PI * 2);
+      ctx.fillStyle = v > 0 ? col : '#000'; ctx.fill(); ctx.stroke();
+      // 上のハート
+      const hx = cx, hy = g.y + 16, r = 13;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy + r * 1.3);
+      ctx.bezierCurveTo(hx - r * 2, hy + r * 0.2, hx - r * 1.1, hy - r * 1.4, hx, hy - r * 0.3);
+      ctx.bezierCurveTo(hx + r * 1.1, hy - r * 1.4, hx + r * 2, hy + r * 0.2, hx, hy + r * 1.3);
+      ctx.fillStyle = v >= 1 ? col : '#000'; ctx.fill(); ctx.stroke();
+      ctx.restore();
     },
   };
 
@@ -111,9 +194,9 @@
       ctx.save();
       ctx.globalAlpha = a;
       ctx.font = G.font(22);
-      const w = ctx.measureText(c.text).width + 48;
-      G.drawWindow(ctx, (G.W - w) / 2, 16, w, 48);
-      G.text(ctx, c.text, G.W / 2, 29, 22, '#fff', 'center');
+      const w = ctx.measureText(c.text).width + 48, M = G.box('map');
+      G.drawWindow(ctx, M.x + (M.w - w) / 2, M.y + 12, w, 48);
+      G.text(ctx, c.text, M.x + M.w / 2, M.y + 25, 22, '#fff', 'center');
       ctx.restore();
     },
   };
@@ -391,6 +474,7 @@
     },
     draw(ctx) {
       W().draw(ctx);
+      G.hud.draw(ctx);
       G.msg.draw(ctx);
       G.choice.draw(ctx);
       if (G.menu.active) G.menu.draw(ctx);

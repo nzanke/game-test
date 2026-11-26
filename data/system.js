@@ -4,6 +4,18 @@ G.defineSystem({
   subtitle: '自作エンジンの動作確認用',
   // タイトル画面の下に出す表示（素材の著作権表示など）
   credits: ['タイル素材：ドット絵世界'],
+  // 画面の配置（画面は816×624）。map：地図の枠、message：文章の枠、portrait：立ち絵の枠、gauge：右端のゲージ
+  // layout を消すと、地図が全画面で文章が下に重なる配置になる
+  layout: {
+    map: { x: 14, y: 14, w: 518, h: 432 },
+    message: { x: 14, y: 456, w: 518, h: 156 },
+    portrait: { x: 440, y: 0, w: 330, h: 624, default: 'ユイ' },  // default：だれも話していないときに出す人
+    gauge: { x: 787, y: 12, h: 604, var: 'affection', max: 100 },  // var の変数の値だけ満ちる
+  },
+  // 立ち絵。img に画像（下そろえで枠の高さに合わせる）を書く。img がないと仮の人影
+  portraits: {
+    'ユイ': { color: '#c9617a' /* , img: 'img/portraits/yui.png' */ },
+  },
   // 最初にいる場所
   start: { map: 'room1', x: 2, y: 6, dir: 'up' },
   // 主人公
