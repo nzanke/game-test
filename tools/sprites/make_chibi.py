@@ -99,6 +99,19 @@ CHARS = {
         'top1': '#f7ecd4', 'top2': '#cdb88f', 'topLine': '#4a3826', 'inner': '#ffffff', 'ribbon1': '#ee4a5e', 'ribbon2': '#9a1f34',
         'low1': '#8e93a6', 'low2': '#4f5366', 'leg': '#2a2730', 'shoe1': '#7a5a4c', 'shoe2': '#2e201c',
     }),
+    # ---- 試し：設定（色）だけで足した新しいキャラ。ゲームにはまだ使っていない
+    'mio_chibi': dict(BASE, girl=True, tones=['#f2c79a', '#c98a52', '#9a5f34', '#704122', '#4a2814'], **{
+        'hair1': '#9a5f34', 'hair2': '#4a2814', 'hairL': '#c98a52', 'hairLine': '#2e180c',
+        'iris1': '#1f6a4a', 'iris2': '#3aa070', 'iris3': '#a8e8c4',
+        'top1': '#2c3550', 'top2': '#1c2238', 'topLine': '#10131f', 'inner': '#ffffff', 'ribbon1': '#3f7fd0', 'ribbon2': '#1d4a86',
+        'low1': '#2c3550', 'low2': '#1c2238', 'leg': '#2a2730', 'shoe1': '#5a3a2c', 'shoe2': '#24160e',
+    }),
+    'sota_chibi': dict(BASE, girl=False, **{
+        'hair1': '#a87a4a', 'hair2': '#5a3a1e', 'hairL': '#d0a470', 'hairLine': '#2e1c0c',
+        'iris1': '#1d3f7a', 'iris2': '#3a6ec0', 'iris3': '#a8c8f0',
+        'top1': '#2a2a32', 'top2': '#16161c', 'topLine': '#0a0a0e', 'inner': '#ffffff', 'ribbon1': '#c8a040', 'ribbon2': '#c8a040',
+        'low1': '#2a2a32', 'low2': '#16161c', 'leg': '#16161c', 'shoe1': '#4a3a30', 'shoe2': '#1e1612',
+    }),
     'haru_chibi': dict(BASE, girl=False, **{
         'hair1': '#3c3f4c', 'hair2': '#16171d', 'hairL': '#626778', 'hairLine': '#0d0d12',
         'iris1': '#5a3a28', 'iris2': '#8a6040', 'iris3': '#c09a78',
@@ -109,7 +122,7 @@ CHARS = {
 
 
 def colors(ch):
-    return {k: (rgb(v) if isinstance(v, str) else v) for k, v in ch.items()}
+    return {k: (rgb(v) if isinstance(v, str) and v.startswith('#') else v) for k, v in ch.items()}
 
 
 # ---------------- 体（首なし・胴は短い・足は小さい） ----------------
@@ -504,12 +517,19 @@ def head(a, c, side):
 HAIR_TONES = ['#a3aee6', '#6873b0', '#454d84', '#30365e', '#1e2240']  # 女子の髪：光・明・中・暗・影
 
 
+def boy_tones(c):
+    """男子の髪の5段：光は明の色を白に寄せ、暗は中と影の間。キャラの髪の色から作る"""
+    L, M, E = tuple(c['hairL'][:3]), tuple(c['hair1'][:3]), tuple(c['hair2'][:3])
+    mix = lambda a, b, t: tuple(round(a[i] * (1 - t) + b[i] * t) for i in range(3))
+    return [mix(L, (255, 255, 255), 0.25), L, M, mix(M, E, 0.45), E]
+
+
 def hair_shade(im, c, side):
     """女子の髪を束ごとに塗り分ける（髪の色だけを塗り直す。輪郭や飾りはそのまま）。
     頭頂：つむじから放射状の束、境目は暗い線、頭の丸みに沿った天使の輪（束の真ん中だけいちばん明るい）。
     前髪：毛先の束ごと、上が明るく下ほど暗い、束の真ん中に光の筋。横・後ろの髪：縦の束、左が明るく右と下が暗い"""
     import math
-    T = [rgb(h) for h in HAIR_TONES]
+    T = [rgb(h) for h in c.get('tones', HAIR_TONES)]
     src = {tuple(c[k][:3]) for k in ('hair1', 'hair2', 'hairL')}
     px = im.load()
     front = side == 'down'
@@ -629,9 +649,9 @@ BANGS_SIDE = (-16, 10, [
 def bangs_side(im, c):
     x0, y0, rows = BANGS_SIDE
     if c['girl']:
-        t = [rgb(h) for h in HAIR_TONES]
+        t = [rgb(h) for h in c.get('tones', HAIR_TONES)]
     else:
-        t = [rgb('#7d8396'), tuple(c['hairL'][:3]), tuple(c['hair1'][:3]), rgb('#2a2c36'), tuple(c['hair2'][:3])]
+        t = boy_tones(c)
     pal = {'H': t[0], 'L': t[1], 'M': t[2], 'D': t[3], 'E': t[4],
            '1': c['skin1'], '2': c['skin2'], '3': c['skinS'], '4': c['handO']}
     px = im.load()
@@ -647,8 +667,9 @@ def ear_side(im, c):
     girl = c['girl']
     x0, y0, rows = EAR_SIDE_GIRL if girl else EAR_SIDE_BOY
     if girl:
-        hairs = {rgb(h) for h in HAIR_TONES}
-        mid, dark = rgb(HAIR_TONES[2]), rgb(HAIR_TONES[4])
+        tn = c.get('tones', HAIR_TONES)
+        hairs = {rgb(h) for h in tn}
+        mid, dark = rgb(tn[2]), rgb(tn[4])
     else:
         hairs = {tuple(c[k][:3]) for k in ('hair1', 'hair2', 'hairL')}
         mid, dark = tuple(c['hair1'][:3]), tuple(c['hair2'][:3])
@@ -674,8 +695,8 @@ def back_frame(c, step):
     def mix(c1, c2, t):
         return tuple(round(c1[i] * (1 - t) + c2[i] * t) for i in range(3))
     girl = c['girl']
-    hair = [rgb(h) for h in HAIR_TONES] if girl else \
-        [rgb('#7d8396'), tuple(c['hairL'][:3]), tuple(c['hair1'][:3]), rgb('#2a2c36'), tuple(c['hair2'][:3])]
+    hair = [rgb(h) for h in c.get('tones', HAIR_TONES)] if girl else \
+        boy_tones(c)
     l1, l2 = tuple(c['low1'][:3]), tuple(c['low2'][:3])
     s1, s2 = tuple(c['shoe1'][:3]), tuple(c['shoe2'][:3])
     pal = {'#': c['line'], 'H': hair[0], 'L': hair[1], 'M': hair[2], 'D': hair[3], 'E': hair[4],
