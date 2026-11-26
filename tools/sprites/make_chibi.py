@@ -108,7 +108,7 @@ CHARS = {
     }),
     # ---- こすい：ユーザーの指定（くすんだピンクの太ももまでの長い髪、頭の上のとがった毛束、左右の黒い大きなリボン、
     # 青い目、笑った口、アイボリーのニットのタートルネックのワンピース、長い袖）。指定になかった靴はこげ茶のショートブーツ
-    'kosui_chibi': dict(BASE, girl=True, long=True, ahoge=True, bows=True, mouth='open', turtleneck=True, sleeves=True,
+    'kosui_chibi': dict(BASE, girl=True, long=True, ahoge=True, bows=True, turtleneck=True, sleeves=True,
                         pleats=False, tie=False, hairclip=False,
                         tones=['#f6d0d5', '#EAB5BC', '#D99DA6', '#A87982', '#7a5560'], **{
         'skin1': '#FFF0E9', 'skin2': '#FFE0D5', 'skinS': '#E9B5AE', 'handO': '#c48a80', 'skinLine': '#8a5048',
