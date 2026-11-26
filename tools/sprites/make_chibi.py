@@ -108,7 +108,7 @@ CHARS = {
     }),
     # ---- こすい：ユーザーの指定（くすんだピンクの太ももまでの長い髪、頭の上のとがった毛束、左右の黒い大きなリボン、
     # 青い目、笑った口、アイボリーのニットのタートルネックのワンピース、長い袖）。指定になかった靴はこげ茶のショートブーツ
-    'kosui_chibi': dict(BASE, girl=True, eye='tare2', long=True, ahoge=True, bows=True, turtleneck=True, sleeves=True,
+    'kosui_chibi': dict(BASE, girl=True, eye='tare2', long=True, long_style='fluffy', ahoge=True, bows=True, turtleneck=True, sleeves=True,
                         pleats=False, tie=False, hairclip=False,
                         tones=['#f6d0d5', '#EAB5BC', '#D99DA6', '#A87982', '#7a5560'], **{
         'skin1': '#FFF0E9', 'skin2': '#FFE0D5', 'skinS': '#E9B5AE', 'handO': '#c48a80', 'skinLine': '#8a5048',
@@ -119,7 +119,7 @@ CHARS = {
     }),
     # ---- かなで：ユーザーの指定（胸までのまっすぐなラベンダーグレーの髪、額を覆うまっすぐな前髪、横長のアーモンド形の目、
     # 桃色のブラウスに濃い灰色のジャンパースカート（太い肩ひも・ウエストの帯・足首までの長いスカート）、白い靴下、濃い灰色のブーツ）
-    'kanade_chibi': dict(BASE, girl=True, eye='almond', long=True, long_len=39, bangs='straight', pinafore=True, longskirt=True,
+    'kanade_chibi': dict(BASE, girl=True, eye='almond', long=True, long_len=39, long_style='straight', bangs='straight', pinafore=True, longskirt=True,
                          pleats=False, tie=False, hairclip=False,
                          tones=['#b9abc0', '#A495AB', '#8A7A95', '#5A5466', '#49484D'], **{
         'skin1': '#FFFAF6', 'skin2': '#FFF3EB', 'skinS': '#F5C3BF', 'handO': '#C7A8BA', 'skinLine': '#8a6a78',
@@ -857,15 +857,37 @@ def back_frame(c, step):
                 for i, ch in enumerate(row):
                     if ch != '.':
                         im.putpixel((CX + x0 + i, y0 + j), rb[ch] + (255,))
-        if c.get('long'):  # 太ももまでの長い後ろ髪：背中を覆う縦の束（手は見えるように肩より下は細く）
+        if c.get('long'):  # 長い髪：土台の表の髪は頭の上（20行より上）だけ使い、首から下は髪型の設定から描き直す
             L = c.get('long_len', 44)
-            for Y in range(28 + o, L + 1):
-                hw = 15 if Y < 33 + o else 13 if Y < 37 + o else 10
+            style = c.get('long_style', 'fluffy')
+            hairsym = set('HLMDE')
+            for j, row in enumerate(rows):
+                Y = top + j
+                if 20 + o <= Y <= 37 + o:   # 首から下の髪と、外にはねた毛先の輪郭を消す（肩や手は残す）
+                    for X, ch in enumerate(row):
+                        if ch in hairsym or (ch == '#' and abs(X - CX) > 12):
+                            im.putpixel((X, Y), (0, 0, 0, 0))
+
+            def hw_at(Y):  # 行ごとの髪の半分の幅（手が見えるよう、手の高さでは細く）
+                if style == 'straight':   # まっすぐ下りる
+                    return 15 if Y < 30 + o else 14 if Y < 36 + o else 11
+                return 16 if Y < 26 + o else 17 if Y < 33 + o else 15 if Y < 37 + o else 11   # ふんわり広がる
+            for Y in range(20 + o, L + 1):
+                hw = hw_at(Y)
                 for x in range(-hw, hw + 1):
                     if Y >= L - 1 and (x + Y) % 2:
                         continue  # 毛先はギザギザ
-                    edge = abs(x) == hw or Y == L
-                    ch = 'E' if edge else 'D' if x % 3 == 0 else ('L' if x < -5 and Y < 34 + o else 'M')
+                    edge = abs(x) == hw or Y == L or (Y >= L - 1 and (x + Y + 1) % 2 == 0 and Y == L - 1 and False)
+                    if edge:
+                        ch = 'E'
+                    elif x % 3 == 0:
+                        ch = 'D'   # 縦の束の境目
+                    elif x < -4 and Y < 28 + o:
+                        ch = 'L'   # 左上から光
+                    elif x > hw - 4 or Y > L - 3:
+                        ch = 'D'   # 右の端と毛先の近くは陰
+                    else:
+                        ch = 'M'
                     put(x, Y, [ch])
         if c.get('ahoge'):
             put(-4, o + 2, ['..E...E..', '.EM..EM..', '.EME.EME.', '..EMEME..'])
