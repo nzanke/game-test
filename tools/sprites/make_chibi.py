@@ -106,9 +106,9 @@ CHARS = {
         'top1': '#2c3550', 'top2': '#1c2238', 'topLine': '#10131f', 'inner': '#ffffff', 'ribbon1': '#3f7fd0', 'ribbon2': '#1d4a86',
         'low1': '#2c3550', 'low2': '#1c2238', 'leg': '#2a2730', 'shoe1': '#5a3a2c', 'shoe2': '#24160e',
     }),
-    # ---- こすい：ユーザーの指定（くすんだピンクの太ももまでの長い髪、頭の上のとがった毛束、左右の黒い大きなリボン、
+    # ---- ぼたん：ユーザーの指定（くすんだピンクの太ももまでの長い髪、頭の上のとがった毛束、左右の黒い大きなリボン、
     # 青い目、笑った口、アイボリーのニットのタートルネックのワンピース、長い袖）。指定になかった靴はこげ茶のショートブーツ
-    'kosui_chibi': dict(BASE, girl=True, eye='tare2', long=True, long_style='fluffy', ahoge=True, bows=True, turtleneck=True, sleeves=True,
+    'botan_chibi': dict(BASE, girl=True, eye='tare2', long=True, long_style='fluffy', ahoge=True, bows=True, turtleneck=True, sleeves=True,
                         pleats=False, tie=False, hairclip=False,
                         tones=['#f6d0d5', '#EAB5BC', '#D99DA6', '#A87982', '#7a5560'], **{
         'skin1': '#FFF0E9', 'skin2': '#FFE0D5', 'skinS': '#E9B5AE', 'handO': '#c48a80', 'skinLine': '#8a5048',
