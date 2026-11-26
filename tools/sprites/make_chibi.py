@@ -199,12 +199,23 @@ EYE_GIRL = ['EEEE.', 'giEEE', 'wiPig', 'wIPIw', 'wKKKw']   # 女子は外側に�
 EYE_BOY = ['.EEE.', 'giEEE', 'wiPig', 'wIPIw', 'wKKKw']
 
 
+# 横向きの目（x −9〜−4、24行から）：茶色の上まぶたの線、黒いまつげ、前の縁は黒、黒目は2ドット幅で上に瞳孔、
+# 白目は白と灰色の2列、目尻は濃い影の肌、いちばん下の段は明るい黒目
+EYE_SIDE = ['ooooo.',
+            'oEEooo',
+            '.IEgg4',
+            '.EDwg4',
+            '.EIwg4',
+            '.LLw..']
+
+
 def eye(a, c, cx, flip=False, side=False):
     if isinstance(a, Pixel):
         rows = EYE_GIRL if c['girl'] else EYE_BOY
-        if side:  # 横向き：前（左）が黒目、後ろが白目。4ドット幅
-            rows = [r[::-1][1:] for r in rows]
-            a.dots(round(cx) - 2, 25, rows, {'E': c['lash'], 'P': c['lash'], 'w': (255, 255, 255), 'g': (214, 208, 216), 'i': c['iris1'], 'I': c['iris2'], 'K': c['iris3']})
+        if side:  # 横向き：手本を1ドットずつ測った作り（EYE_SIDE）。女子は目尻の列が髪にかかるので描かない
+            rows = [r[:-1] + '.' for r in EYE_SIDE] if c['girl'] else EYE_SIDE
+            a.dots(-9, 24, rows, {'o': c['earO'], 'E': c['lash'], 'D': c['iris1'], 'I': c['iris2'], 'L': c['iris3'],
+                                   'w': (255, 255, 255), 'g': (196, 190, 200), '4': c['handO']})
             return
         if flip:
             rows = [r[::-1] for r in rows]
