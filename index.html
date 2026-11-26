@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>game-test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- 半角英数だけ BIZ UDGothic、日本語は BIZ UDPGothic -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&text=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ%21%22%23%24%25%26%27%28%29%2A%2B%2C-.%2F%3A%3B%3C%3D%3E%3F%40%5B%5C%5D%5E_%60%7B%7C%7D~%20&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="screen"></canvas>
+  <div id="pad">
+    <div class="dpad">
+      <button class="u" data-key="up">▲</button>
+      <button class="l" data-key="left">◀</button>
+      <button class="r" data-key="right">▶</button>
+      <button class="d" data-key="down">▼</button>
+    </div>
+    <div class="btns">
+      <button class="q" data-key="special">★</button>
+      <button class="log" data-key="log">ログ</button>
+      <button class="b" data-key="cancel">戻る</button>
+      <button class="a" data-key="ok">決定</button>
+    </div>
+  </div>
+</div>
+
+<!-- エンジン -->
+<script src="engine/core.js"></script>
+<script src="engine/world.js"></script>
+<script src="engine/interpreter.js"></script>
+<script src="engine/ui.js"></script>
+
+<!-- データ（マップを足したらここに1行足す） -->
+<script src="data/system.js"></script>
+<script src="data/items.js"></script>
+<script src="data/commons.js"></script>
+<script src="data/maps/room1.js"></script>
+<script src="data/maps/hall.js"></script>
+<script src="data/maps/library.js"></script>
+
+<script src="engine/main.js"></script>
+</body>
+</html>

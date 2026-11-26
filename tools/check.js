@@ -1,0 +1,117 @@
+// データの書き間違いを探す：node tools/check.js
+// マップの大きさ、マス記号、イベント命令の名前、参照先（マップ・アイテム・コモン・イベント）を調べる。
+'use strict';
+const fs = require('fs'), path = require('path'), vm = require('vm');
+const root = path.join(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]).filter((s) => !s.endsWith('main.js'));
+
+const ctx = vm.createContext({ console, Math, JSON });
+ctx.window = ctx;
+for (const s of scripts) vm.runInContext(fs.readFileSync(path.join(root, s), 'utf8'), ctx, { filename: s });
+const G = ctx.G, D = G.data;
+const errors = [], warns = [];
+const err = (where, msg) => errors.push(`${where}: ${msg}`);
+
+// index.html に入っていないマップファイル
+for (const f of fs.readdirSync(path.join(root, 'data/maps'))) {
+  if (f.endsWith('.js') && !scripts.includes('data/maps/' + f)) err('index.html', `data/maps/${f} が読み込まれていません`);
+}
+
+const DEFAULT_LEGEND = ['#', '.', ' ', 'D'];
+const TRIGGERS = ['action', 'touch', 'auto', 'parallel'];
+const COND_KEYS = ['switch', 'self', 'var', 'item', 'dir', 'script', 'all', 'any', 'not', 'is', 'count'];
+const MOVES = ['up', 'down', 'left', 'right', 'face', 'wait', 'speed', 'through', 'hide', 'show', 'facePlayer', 'random', 'toward'];
+const legendOf = (m) => new Set([...DEFAULT_LEGEND, ...Object.keys(D.system.legend || {}), ...Object.keys(m.legend || {})]);
+const solidOf = (m) => Object.assign({ '#': { solid: true }, ' ': { solid: true } }, D.system.legend || {}, m.legend || {});
+
+function checkCond(c, where) {
+  if (!c) return;
+  if (Array.isArray(c)) return c.forEach((x) => checkCond(x, where));
+  for (const k of Object.keys(c)) if (!COND_KEYS.includes(k)) err(where, `未知の条件「${k}」`);
+  if (c.all) checkCond(c.all, where);
+  if (c.any) checkCond(c.any, where);
+  if (c.not) checkCond(c.not, where);
+  if (c.item !== undefined && !D.items[c.item]) err(where, `アイテム「${c.item}」がありません`);
+  if (c.var && (!Array.isArray(c.var) || c.var.length !== 3)) err(where, 'var は [変数名, 比較, 値] の形で');
+}
+function checkSteps(steps, where) {
+  for (const s of [].concat(steps)) if (!MOVES.includes(String(s).split(':')[0])) err(where, `未知の移動命令「${s}」`);
+}
+function checkList(list, where, map) {
+  if (!Array.isArray(list)) return err(where, '命令の並びが配列になっていません');
+  list.forEach((c, i) => {
+    const w = `${where} の${i + 1}番目`;
+    if (!Array.isArray(c) || typeof c[0] !== 'string') return err(w, '命令は [\'命令名\', ...] の形で');
+    const [name, ...a] = c;
+    if (!G.commands[name]) return err(w, `未知の命令「${name}」`);
+    switch (name) {
+      case 'choice':
+        if (!Array.isArray(a[0])) err(w, '選択肢の文が配列になっていません');
+        (a[1] || []).forEach((b, j) => checkList(b, `${w}（選択肢${j + 1}）`, map));
+        break;
+      case 'if': checkCond(a[0], w); if (a[1]) checkList(a[1], w + '（成り立つとき）', map); if (a[2]) checkList(a[2], w + '（成り立たないとき）', map); break;
+      case 'loop': checkList(a[0], w + '（くり返し）', map); break;
+      case 'common': if (!D.commons[a[0]]) err(w, `コモンイベント「${a[0]}」がありません`); break;
+      case 'item': case 'getItem': if (!D.items[a[0]]) err(w, `アイテム「${a[0]}」がありません`); break;
+      case 'transfer': {
+        const m = D.maps[a[0]];
+        if (!m) { err(w, `マップ「${a[0]}」がありません`); break; }
+        const ch = (m.tiles[a[2]] || '')[a[1]], sol = solidOf(m)[ch];
+        if (ch === undefined) err(w, `移動先 (${a[1]},${a[2]}) がマップの外です`);
+        else if (sol && sol.solid) err(w, `移動先 (${a[1]},${a[2]}) は通れないマスです`);
+        break;
+      }
+      case 'move': checkSteps(a[1], w); // fallthrough
+      case 'balloon':
+        if (map && a[0] !== 'player' && a[0] !== 'this' && !(map.events || []).some((e) => e.id === a[0])) err(w, `イベント「${a[0]}」がこのマップにありません`);
+        break;
+      case 'openMenu': if (a[0] && !['items', 'cards', 'log', 'save', 'load', 'title'].includes(a[0])) err(w, `メニュー「${a[0]}」はありません`); break;
+    }
+  });
+}
+
+// システム
+const st = D.system.start;
+if (!st || !D.maps[st.map]) err('system.js', '開始マップ（start.map）がありません');
+for (const [n, l] of Object.entries(D.commons)) checkList(l, `コモン「${n}」`, null);
+if (D.system.specialKey && !D.commons[D.system.specialKey]) err('system.js', `specialKey のコモン「${D.system.specialKey}」がありません`);
+for (const [id, it] of Object.entries(D.items)) {
+  if (!it.name) err(`アイテム「${id}」`, 'name がありません');
+  if (it.common && !D.commons[it.common]) err(`アイテム「${id}」`, `コモン「${it.common}」がありません`);
+}
+
+// マップ
+for (const [id, m] of Object.entries(D.maps)) {
+  const where = `マップ「${id}」`, lg = legendOf(m);
+  if (!Array.isArray(m.tiles) || m.tiles.length !== G.ROWS) err(where, `tiles は${G.ROWS}行にしてください（今は${(m.tiles || []).length}行）`);
+  (m.tiles || []).forEach((row, y) => {
+    if ([...row].length !== G.COLS) err(where, `${y + 1}行目が${[...row].length}文字です（${G.COLS}文字にする）`);
+    for (const ch of row) if (!lg.has(ch)) err(where, `${y + 1}行目の記号「${ch}」が legend にありません`);
+  });
+  const ids = new Set();
+  for (const e of m.events || []) {
+    const ew = `${where} のイベント「${e.id}」`;
+    if (!e.id) err(where, 'id のないイベントがあります');
+    if (ids.has(e.id)) err(ew, 'id が重複しています');
+    ids.add(e.id);
+    if (!(e.x >= 0 && e.x < G.COLS && e.y >= 0 && e.y < G.ROWS)) err(ew, `位置 (${e.x},${e.y}) がマップの外です`);
+    (e.pages || []).forEach((p, i) => {
+      const pw = `${ew} の${i + 1}ページ目`;
+      if (p.trigger && !TRIGGERS.includes(p.trigger)) err(pw, `trigger「${p.trigger}」は ${TRIGGERS.join('/')} のどれか`);
+      if (p.priority && !['below', 'same', 'above'].includes(p.priority)) err(pw, `priority「${p.priority}」は below/same/above のどれか`);
+      checkCond(p.cond, pw);
+      if (p.autoMove) checkSteps(p.autoMove, pw);
+      checkList(p.list || [], pw, m);
+    });
+  }
+}
+if (st && D.maps[st.map]) {
+  const ch = D.maps[st.map].tiles[st.y][st.x];
+  if ((solidOf(D.maps[st.map])[ch] || {}).solid) err('system.js', '開始位置が通れないマスです');
+}
+
+console.log(`マップ ${Object.keys(D.maps).length}　アイテム ${Object.keys(D.items).length}　コモン ${Object.keys(D.commons).length}`);
+warns.forEach((w) => console.log('注意: ' + w));
+if (errors.length) { errors.forEach((e) => console.log('×  ' + e)); process.exit(1); }
+console.log('問題は見つかりませんでした');
