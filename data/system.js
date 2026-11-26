@@ -9,12 +9,12 @@ G.defineSystem({
   layout: {
     map: { x: 14, y: 14, w: 518, h: 432 },
     message: { x: 14, y: 456, w: 518, h: 156 },
-    portrait: { x: 440, y: 0, w: 330, h: 624, default: 'かなで' },  // default：だれも話していないときに出す人
+    portrait: { x: 440, y: 0, w: 330, h: 624, default: 'ぼたん' },  // 会話中は話している人、それ以外（地の文も）は default の人（主人公）
     gauge: { x: 787, y: 12, h: 604, var: 'affection', max: 100 },  // var の変数の値だけ満ちる
   },
   // 立ち絵。img に画像（下そろえで枠の高さに合わせる）を書く。img がないと仮の人影
   portraits: {
-    'ぼたん': { color: '#d99da6' },
+    'ぼたん': { color: '#d99da6', img: 'img/portraits/botan.png', crop: [128, 0, 395, 746] },
     'かなで': { color: '#8a7a95', img: 'img/portraits/kanade.png', crop: [62, 0, 402, 760] },  // crop：腰から上を拡大して見せる。ドット絵の立ち絵なら pixel: true
   },
   // 最初にいる場所

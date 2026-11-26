@@ -1,5 +1,6 @@
 """立ち絵の画像の白い背景を抜いて、余白を切り詰める。
-使い方: python3 -I tools/sprites/cut_portrait.py 元の画像.png img/portraits/名前.png
+使い方: python3 -I tools/sprites/cut_portrait.py 元の画像.png img/portraits/名前.png [black]
+（背景が黒い絵は最後に black をつける）
 外側から白に近い色だけをたどって透明にするので、絵の中の白（靴下・肌の明るい所）は残る。縁は白さに応じて半透明にしてなじませる。
 """
 import sys
@@ -8,14 +9,23 @@ from PIL import Image
 from scipy import ndimage
 
 src, out = sys.argv[1], sys.argv[2]
+black = len(sys.argv) > 3 and sys.argv[3] == 'black'
 im = Image.open(src).convert('RGBA')
 a = np.asarray(im).astype(np.float32)
 rgb = a[..., :3]
-whiteness = rgb.min(axis=2)                      # 3色のうち最も暗い値（白ほど大きい）
-near = (whiteness > 236) & (rgb.max(axis=2) - rgb.min(axis=2) < 14)   # 白に近く、色みのない所
+if black:   # 黒い背景：3色のうち最も明るい値が小さい所を背景の候補に（「白さ」は反転して扱う）
+    whiteness = 255 - rgb.max(axis=2)
+    near = (rgb.max(axis=2) < 14)
+else:
+    whiteness = rgb.min(axis=2)                  # 3色のうち最も暗い値（白ほど大きい）
+    near = (whiteness > 236) & (rgb.max(axis=2) - rgb.min(axis=2) < 14)   # 白に近く、色みのない所
 lab, n = ndimage.label(near)
 edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
 bg = np.isin(lab, list(edge))
+if black:   # 黒い背景は、髪の束の間などに囲まれた真っ黒なかたまり（30ドット以上）も背景にする
+    sizes = ndimage.sum(near, lab, index=np.arange(1, n + 1))
+    big = np.where(sizes >= 30)[0] + 1
+    bg |= np.isin(lab, big)
 # 背景のすぐ外側の縁（2ドット）は、白さに応じて半透明にする
 ring = ndimage.binary_dilation(bg, iterations=2) & ~bg
 alpha = np.where(bg, 0, 255).astype(np.float32)
