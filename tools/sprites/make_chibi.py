@@ -484,10 +484,11 @@ def extras(a, c, side):
     if c.get('bows'):
         for s in ((-1, 1) if side == 'down' else (1,)):
             cx, cy = (s * 14, 13) if side == 'down' else (11, 13)
-            a.part([('p', [(cx + 0.4 * s, cy + 1), (cx + s * 2.4, cy + 8.6), (cx + s * 4.2, cy + 8), (cx + s * 1.6, cy + 1)])], c['ribbon1'], c['ribbon2'], line=c['line'], lw=0.6)   # 垂れた帯
-            a.part([('p', [(cx, cy), (cx - 4.4, cy - 3.2), (cx - 4.4, cy + 3)]), ('p', [(cx, cy), (cx + 4.4, cy - 3.2), (cx + 4.4, cy + 3)])],
+            k = 0.7   # リボンの大きさ
+            a.part([('p', [(cx + 0.4 * s, cy + 1), (cx + s * 2.4 * k, cy + 8.6 * k), (cx + s * 4.2 * k, cy + 8 * k), (cx + s * 1.6 * k, cy + 1)])], c['ribbon1'], c['ribbon2'], line=c['line'], lw=0.6)   # 垂れた帯
+            a.part([('p', [(cx, cy), (cx - 4.4 * k, cy - 3.2 * k), (cx - 4.4 * k, cy + 3 * k)]), ('p', [(cx, cy), (cx + 4.4 * k, cy - 3.2 * k), (cx + 4.4 * k, cy + 3 * k)])],
                    c['ribbon1'], c['ribbon2'], line=c['line'], lw=0.6)   # 左右の輪
-            a.part([('e', cx - 1.4, cy - 1.4, cx + 1.4, cy + 1.4)], c['ribbon2'], c['ribbon2'], line=c['line'], lw=0.5)   # 結び目
+            a.part([('e', cx - 1.4 * k, cy - 1.4 * k, cx + 1.4 * k, cy + 1.4 * k)], c['ribbon2'], c['ribbon2'], line=c['line'], lw=0.5)   # 結び目
     if c.get('mouth') == 'open' and side in MOUTH_OPEN and isinstance(a, Pixel):
         x0, y0, rows = MOUTH_OPEN[side]
         a.dots(x0, y0, rows, {'M': c.get('mouthDark', (122, 44, 52)), 'T': c.get('mouthTongue', (232, 120, 128))})
@@ -838,8 +839,8 @@ def back_frame(c, step):
         if c.get('ahoge'):
             put(-4, o + 2, ['..E...E..', '.EM..EM..', '.EME.EME.', '..EMEME..'])
         if c.get('bows'):
-            for x0 in (-16, 10):
-                put(x0, 10 + o, ['rr...rr', 'rRrkrRr', 'rRrkrRr', 'rr.k.rr', '...kk..', '...k.k.'])
+            for x0 in (-15, 11):
+                put(x0, 11 + o, ['r...r', 'rrkrr', 'r.k.r', '..kk.'])
         if c.get('hairclip', True):  # リボン（正面では右上。後ろからは左上に見える）
             put(-10, 8 + o, ['.r.r', 'rRRr', '.r.r'])
     return im
