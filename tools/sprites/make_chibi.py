@@ -118,18 +118,23 @@ def body(a, c, side, step, back):
     girl = c['girl']
     la, ra = {0: (1.2, 0), 1: (0, 0), 2: (0, 1.2)}[step]
     if side == 'left':
-        sw = {0: -1.6, 1: 0, 2: 1.6}[step]
+        # 横向き：胴は細く（9〜11ドット）、手は胴の中ほどより後ろ。前（左）がマイナス
+        sw = {0: -1, 1: 0, 2: 1}[step]
         if girl:
-            a.part([('p', [(-5.8, 37.4), (5.8, 37.4), (7.6, 43.6), (-7.6, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-            for x in (-3, 1, 5):  # 折り目
-                a.dots(x, 41 if x != 5 else 42, ['p'] * (3 if x != 5 else 2), {'p': c['low2']})
+            a.part([('p', [(-5.4, 38.4), (3.8, 38.4), (5, 43.6), (-6.8, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            for x, y0 in ((-3, 41), (0, 41), (3, 42)):  # 折り目
+                a.dots(x, y0, ['p'] * (44 - y0), {'p': c['low2']})
         else:
-            a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 43.6), (-4.4, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-        a.part([('p', [(-3.8, 35.4), (4, 35.4), (4.4, 40.4), (-4.2, 40.4)]), ('e', -6.4, 33, 6.4, 38.2)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
-        a.part([('p', [(-1.8, 34.4), (2, 34.4), (2 + sw, 38.6), (-1.8 + sw, 38.6)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
-        a.dots(round(sw) - 2, 38, ['.oKE', 'oMMK', 'oLdK', '.EE.'], {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']})
+            a.part([('p', [(-5, 40.6), (3.6, 40.6), (4, 44.6), (-5.4, 44.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        bottom = 39.4 if girl else 40.4
+        a.part([('p', [(-4.6, 34.6), (3, 34.6), (4.4, 37.6), (4, bottom), (-5.4, bottom), (-5.6, 37.6)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
+        if not girl:
+            a.dots(-5, 41, ['bbbbbbbbb'], {'b': c['ribbon1']})
+        # 腕（肩から手へ）と手
+        a.part([('p', [(-0.6, 35.2), (3, 35.2), (3.4 + sw, 38.6), (0 + sw, 38.6)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
+        a.dots(sw, 38, ['.oKo.', 'oLMKo', 'oMMKo', 'oKdKE', '.EEE.'], {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']})
         if girl:
-            a.part([('p', [(-5.4, 34), (-3, 34), (-4, 36.6)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+            a.part([('p', [(-5.2, 35), (-3, 35), (-4, 37.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         feet(a, c, 'side', step)
         return
     # 正面。あごの下（35行）から なで肩で始まり、下へ広がる
@@ -180,8 +185,9 @@ def feet(a, c, side, step):
         for x0, l in ((-5, lift[0]), (1, lift[1])):
             a.dots(x0, 45 - l, foot, pal)
     else:
-        if step == 1:
-            a.dots(-3, 45, foot, pal)
+        if step == 1:  # 前後の足が並んで見える（奥の足を先に描く）
+            a.dots(-1, 45, ['olllo', 'odddo', 'odddo'], pal)
+            a.dots(-5, 45, foot, pal)
         else:
             a.dots(1, 44, ['olllo', 'odddo', 'odddo'], pal)  # 奥の足（上がっている）
             a.dots(-6, 45, foot, pal)
@@ -196,8 +202,10 @@ EYE_BOY = ['.EEE.', 'giEEE', 'wiPig', 'wIPIw', 'wKKKw']
 def eye(a, c, cx, flip=False, side=False):
     if isinstance(a, Pixel):
         rows = EYE_GIRL if c['girl'] else EYE_BOY
-        if side:
-            rows = [r[1:] for r in rows]
+        if side:  # 横向き：前（左）が黒目、後ろが白目。4ドット幅
+            rows = [r[::-1][1:] for r in rows]
+            a.dots(round(cx) - 2, 25, rows, {'E': c['lash'], 'P': c['lash'], 'w': (255, 255, 255), 'g': (214, 208, 216), 'i': c['iris1'], 'I': c['iris2'], 'K': c['iris3']})
+            return
         if flip:
             rows = [r[::-1] for r in rows]
         w = len(rows[0])
@@ -277,6 +285,31 @@ def face_shade(a, c, m, hw_top=9):
             a.im.putpixel((X, Y), rgb_t(tone[t]))
 
 
+def side_face_shade(a, c, m):
+    """横顔の明暗：前の縁は濃い影、前寄りの頬（28〜31行）がいちばん明るく、耳に近い後ろほど暗い。あごの段は影色"""
+    tone = {1: c['skin1'], 2: c['skin2'], 3: c['skinS'], 4: c['handO']}
+    px = m.load()
+    for Y in range(FH):
+        xs = [X for X in range(FW) if px[X, Y] > 127]
+        if not xs:
+            continue
+        L, R = min(xs), max(xs)
+        for X in xs:
+            df, db = X - L + 1, R - X + 1
+            t = 2 if Y <= 27 else (1 if df <= 7 else 2) if Y <= 31 else 2 if Y <= 33 else 3
+            if df == 1:
+                t = max(t, 4 if Y >= 29 else 3)
+            elif df == 2 and t == 1:
+                t = 2
+            if db == 1:
+                t = max(t, 4)
+            elif db <= 3:
+                t = max(t, 3)
+            elif db <= 5:
+                t = max(t, 2)
+            a.im.putpixel((X, Y), rgb_t(tone[t]))
+
+
 def rgb_t(c):
     return tuple(c[:3]) + (255,)
 
@@ -295,24 +328,25 @@ def head(a, c, side):
             a.clip(hm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.45, blur=0.6)
         return
     if side == 'left':
-        if girl:
-            a.part([('p', [(1, 14), (15.6, 14), (15, 36), (9, 38.6), (3, 33)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
+        # 横向き：顔は頭の前・下寄り（x −12〜+1）、後ろに耳。いちばん前の前髪は額の前に垂れる
+        if girl:  # 後ろ髪はあごの高さまで
+            a.part([('p', [(1, 14), (15.6, 14), (15.4, 32.6), (10.4, 35.2), (3, 32)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         hm = a.part([('e', -14.2, 7 if girl else 6.4, 14.6, 33)], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
-        fm = a.part([('e', -15.4, 15.6, 3.6, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
-        a.clip(fm, [('r', -16, 17, 4, 19.4)], c['skinS'], 0.5, blur=0.8)
-        bangs(a, c, -15.2, 3, [(-15.6, -12, 22.6), (-11.6, -8.6, 20.6), (-8, -5, 21.8), (-4.4, -1.4, 20.4), (-0.8, 2.6, 21.4)], base=18, face=fm)
-        sideline = None if isinstance(a, Pixel) else c['hairLine']
-        sm = a.part([('p', [(4.6, 14), (14.4, 14), (14, 28.4), (8.6, 32.4), (5.6, 26)])], c['hair1'], c['hair2'], shade=None if isinstance(a, Pixel) else c['hair2'], line=sideline, lw=0.7)
+        fm = a.part([('e', -12.6, 16, 2.8, 34.6)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
         if isinstance(a, Pixel):
-            a.tint(ImageChops.multiply(ImageChops.subtract(sm.filter(ImageFilter.MaxFilter(3)), sm), fm), c['hairLine'], 1.0)
+            side_face_shade(a, c, fm)
+            a.dots(-14, 29, ['lN', 'lN'], {'l': c['skinLine'], 'N': c['handO']})  # 鼻：顔の線が1ドット前に出る
+        bangs(a, c, -15.2, 3, [(-16, -12.4, 25.4), (-12.6, -9, 23.4), (-9.2, -5.6, 24.2), (-5.8, -2.4, 23), (-2.6, 1, 22.4)], base=18, face=fm)
+        # 耳（顔の後ろ）
+        a.part([('e', 1, 23.6, 4.6, 29.6)], c['skin2'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
         if isinstance(a, Pixel):
+            a.dots(3, 25, ['3', '4'], {'3': c['skinS'], '4': c['handO']})
             a.stroke([(-6, 9), (-2, 7), (3, 7)], c['hairL'])
         else:
             a.clip(hm, [('e', -8, 8.4, 6, 11.6)], c['hairL'], 0.45, blur=0.6)
-        eye(a, c, -10.4, side=True)
+        eye(a, c, -5, side=True)
         if girl:
-            a.blob(-13.4, 29.8, -10, 31.4, c['blush'], 0.45, 0.6)
-        a.dots(-14, 31, ['n'], {'n': c['skinS']})  # 鼻（点）
+            a.blob(-11.6, 29.8, -8.4, 31.4, c['blush'], 0.45, 0.6)
         if girl:
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         if not girl:
