@@ -108,7 +108,7 @@ G.addEvents('main1f', [
 
 - **ページは「条件を満たすもののうち、いちばん後ろ」が選ばれる。** どれも満たさなければ、そのイベントは無いのと同じ
 - `trigger`：`action`（決定キーで調べる。省略時）／`touch`（触れたら）／`auto`（自動で1回ずつ。終わるまで操作できない）／`parallel`（並列。くり返し動き続ける）
-- `char`：見た目。`{ shape: 'person', color, hair }` 人／`'box'` 箱／`'card'` カード／`'icon', icon: '★'` 文字／`sprite: 'img/chars/haru.png'` 歩行グラフィック（横3コマ×縦4段：下・左・右・上。1コマ48pxは等倍、それより小さいと1.5倍）／`tile: ['school_in', 5, 38]` 素材／`img: 'img/chars/x.png'` 画像。省略すると見えないイベント
+- `char`：見た目。`{ shape: 'person', color, hair }` 人／`'box'` 箱／`'card'` カード／`'icon', icon: '★'` 文字／`sprite: 'img/chars/haru.png'` 歩行グラフィック（横3コマ×縦4段：下・左・右・上。1コマ幅48px以上は等倍、それより小さいと1.5倍。足元をマスの下端にそろえて描く）／`tile: ['school_in', 5, 38]` 素材／`img: 'img/chars/x.png'` 画像。省略すると見えないイベント
 - `priority`：`below`（下。上を歩ける）／`same`（通れない）／`above`（上）。省略時は、見た目があれば `same`、なければ `below`
 - `through: true`：すり抜け　`fixDir: true`：話しかけても振り向かない　`sensor: false`：近づいても「！」を出さない
 - `autoMove: ['left', 'wait:60', 'right']`：自律移動（くり返し）
