@@ -1,8 +1,9 @@
-// objects — 自作の家具・小物（tools/sprites/make_objects.py で描いたもの。スチール製を前提に描く。48px、8列×6段）
+// objects — 自作の家具・小物（tools/sprites/make_objects.py で描いたもの。スチール製を前提に描く。48px、8列×8段）
 // 地図では { tile: ['objects', 列, 段, 幅, 高さ], x, y }。置き場所は make_objects.py の OBJECTS の表
 //   0〜1段：自販機（赤）0 / 自販機（青）1 / 冷蔵ショーケース 2 / スチールロッカー 3 / スチール書庫 4 / 書類棚 5 / スチール書棚 6（どれも1×2）、
 //           掛け時計 7（0段）、ごみ箱 7（1段）
 //   2段：長机（3人掛け）0（3×1）、長机（2人掛け）3（2×1）、教卓 5（2×1）、ワゴン 7
 //   3段：椅子（後ろ 0・正面 1・横 2）、パイプ椅子 3、丸テーブル 4、段ボール箱 5、消火器 6
 //   4〜5段：会議机 0（2×2）、スチールの棚 2（2×2）、掲示板 4（4段、2×1）、ホワイトボード 6（4段、2×1）、ソファ 4（5段、2×1）
-G.defineTileset('objects', { src: 'img/tiles/objects.png', size: 48, cols: 8, rows: 6 });
+//   6〜7段：黒板 0（3×2、壁の2段目に置く）、観葉植物 3（6段、1×1）
+G.defineTileset('objects', { src: 'img/tiles/objects.png', size: 48, cols: 8, rows: 8 });

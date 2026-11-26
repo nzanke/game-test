@@ -4,13 +4,13 @@ G.defineSystem({
   subtitle: '（システムとデザインの試作）',
   // タイトル画面の下に出す表示（素材の著作権表示など）
   credits: ['タイル素材：ドット絵世界'],
-  // 画面の配置（画面は816×624）。map：地図の枠、message：文章の枠、portrait：立ち絵の枠、gauge：右端のゲージ
+  // 画面の配置（画面は816×624）。map：地図の枠、message：文章の枠、portrait：立ち絵の枠、gauge：右端のゲージ（いまは使っていない。例 gauge: { x: 787, y: 12, h: 604, var: 'affection', max: 100 }）
   // layout を消すと、地図が全画面で文章が下に重なる配置になる
   layout: {
     map: { x: 14, y: 14, w: 518, h: 432 },
     message: { x: 14, y: 456, w: 518, h: 156 },
-    portrait: { x: 440, y: 0, w: 330, h: 624, default: 'ぼたん' },  // 会話中は話している人、それ以外（地の文も）は default の人（主人公）
-    gauge: { x: 787, y: 12, h: 604, var: 'affection', max: 100 },  // var の変数の値だけ満ちる
+    portrait: { x: 540, y: 0, w: 276, h: 624, default: 'ぼたん' },  // 地図の枠に重ねない（右端まで）。はみ出した髪は枠で切る
+  // 会話中は話している人、それ以外（地の文も）は default の人（主人公）
   },
   // 立ち絵。img に画像（下そろえで枠の高さに合わせる）を書く。img がないと仮の人影
   portraits: {
@@ -71,5 +71,8 @@ G.defineSystem({
     'Q': { tile: ['floor', 0, 2] },   // 灰色のPタイル（大学の教室）
     'R': { tile: ['floor', 1, 2] },   // タイルカーペット
     'S': { tile: ['floor', 2, 2] },   // ベージュのPタイル
+    'U': { solid: true, tile: ['floor', 3, 2] },   // 教室の壁（上：天井の見切り）
+    'V': { solid: true, tile: ['floor', 4, 2] },   // 教室の壁（中）
+    'W': { solid: true, tile: ['floor', 5, 2] },   // 教室の壁（下：腰壁と幅木）
   },
 });

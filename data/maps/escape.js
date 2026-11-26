@@ -7,9 +7,9 @@ G.defineMap('escape', {
   name: '夕方の空き教室',
   tiles: [  // 17×13マスの地図のまん中に、床が横11×縦7マスの部屋（まわりは暗い外側）
     '#################',
-    '###44444444447###',
-    '###55555555558###',
-    '###66666666669###',
+    '###UUUUUUUUUU7###',
+    '###VVVVVVVVVV8###',
+    '###WWWWWWWWWW9###',
     '###QQQQQQQQQQP###',  // 床は灰色のPタイル（記号 Q）、扉の前にゴムマット（記号 P）
     '###QQQQQQQQQQQ###',
     '###QQQQQQQQQQQ###',
@@ -21,10 +21,11 @@ G.defineMap('escape', {
     '#################',
   ],
   objects: [
-    { tile: [I, 0, 25, 3, 2], x: 4, y: 1, solid: false },              // 黒板
-    { tile: [I, 0, 25, 3, 2], x: 7, y: 1, solid: false },              // 黒板
-    { tile: [I, 5, 19], x: 11, y: 2, solid: false },                    // 時計
-    { tile: [I, 7, 34, 1, 2], x: 13, y: 9 },                           // 植木
+    // 壁は自作のタイル（記号 U・V・W）。黒板は壁の2段目に置くと目の高さになる
+    { tile: ['objects', 0, 6, 3, 2], x: 4, y: 2, solid: false },       // 黒板
+    { tile: ['objects', 0, 6, 3, 2], x: 7, y: 2, solid: false },       // 黒板
+    { tile: ['objects', 7, 0, 1, 1], x: 11, y: 2, solid: false },      // 掛け時計
+    { tile: ['objects', 3, 6, 1, 1], x: 13, y: 10 },                   // 観葉植物
     // 自作の家具・小物（data/tilesets/objects.js。スチール製）
     { tile: ['objects', 4, 0, 1, 2], x: 3, y: 3, solid: 'bottom' },    // スチール書庫
     { tile: ['objects', 3, 0, 1, 2], x: 4, y: 3, solid: 'bottom' },    // ロッカー
@@ -101,7 +102,7 @@ G.defineMap('escape', {
       ['text', 'ぼたん', 'お酒だったらよかったのになぁ。'],
     ] }] },
     { id: 'plant', x: 13, y: 10, pages: [{ list: [
-      ['text', '', '窓ぎわの植木。'],
+      ['text', '', '教室のすみの観葉植物。'],
       ['text', 'ぼたん', 'ちゃんとお水もらえてるんですかねぇ。'],
     ] }] },
     { id: 'vending', x: 10, y: 4, pages: [{ list: [

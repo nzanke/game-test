@@ -5,6 +5,7 @@
   img/tiles/floor.png … 床タイル 8列×3段（並べても継ぎ目が出ないように描く。記号は system.js の legend の A〜P）
     1段目：市松 石 レンガ 大理石 赤じゅうたん 人工芝 体育館の床 コンクリート
     2段目：縞鋼板 グレーチング 点字ブロック（線） 点字ブロック（点） 濃い木の床 青じゅうたん 土 ゴムマット
+    3段目：灰色のPタイル タイルカーペット ベージュのPタイル（記号 Q〜S）、教室の壁（上・中・下の3段で1枚。記号 U〜W）
 """
 import random
 from pathlib import Path
@@ -263,11 +264,50 @@ def tile_carpet(seed):   # タイルカーペット（50cm角、毛の流れを1
     return im
 
 
+WALL = (230, 226, 214)
+
+
+def wall(part):   # 大学の教室の壁（3段で1枚の壁）：0＝天井の見切りと上の壁、1＝壁、2＝腰見切り・腰壁・幅木
+    im, d = tile(WALL)
+    px = im.load()
+    for y in range(T):   # 上ほどわずかに暗い（天井の陰）
+        k = {0: 0.93 + 0.05 * y / T, 1: 0.98 + 0.02 * y / T, 2: 1.0}[part]
+        for x in range(T):
+            px[x, y] = shade(WALL, k)
+    noise(im, 0.012, 30 + part, 2)
+    if part == 0:
+        d.rectangle((0, 0, T - 1, 4), fill=(168, 166, 160))          # 天井
+        d.line((0, 5, T - 1, 5), fill=(120, 118, 114))
+        d.rectangle((0, 6, T - 1, 9), fill=(240, 238, 230))          # 廻り縁
+        d.line((0, 6, T - 1, 6), fill=(252, 252, 248))
+        d.line((0, 10, T - 1, 10), fill=shade(WALL, 0.78))
+        d.line((0, 11, T - 1, 11), fill=shade(WALL, 0.88))
+    if part == 2:
+        d.line((0, 19, T - 1, 19), fill=shade(WALL, 0.84))           # 腰見切りの上の影
+        d.rectangle((0, 20, T - 1, 22), fill=(176, 180, 188))       # 腰見切り（スチール）
+        d.line((0, 20, T - 1, 20), fill=(236, 240, 246))
+        d.line((0, 22, T - 1, 22), fill=(112, 116, 124))
+        base = (194, 186, 170)
+        for y in range(23, 43):                                      # 腰壁（下ほど暗い）
+            k = 1.02 - 0.08 * (y - 23) / 20
+            for x in range(T):
+                px[x, y] = shade(base, k)
+        for x0 in (0, 24):                                           # 板の継ぎ目
+            d.line((x0, 23, x0, 42), fill=shade(base, 0.78))
+            d.line((x0 + 1, 23, x0 + 1, 42), fill=shade(base, 1.08))
+        d.line((0, 23, T - 1, 23), fill=shade(base, 0.8))
+        d.rectangle((0, 43, T - 1, 47), fill=(86, 86, 94))          # 幅木
+        d.line((0, 43, T - 1, 43), fill=(150, 152, 160))
+        d.line((0, 47, T - 1, 47), fill=(50, 50, 58))
+    return im
+
+
 FLOORS = [
     checker, stone, brick, marble, lambda: carpet((150, 40, 46), (124, 30, 36), 6), turf, gym, concrete,
     checkered_plate, grating, lambda: tactile(False), lambda: tactile(True), dark_wood,
     lambda: carpet((52, 74, 140), (40, 58, 116), 7), soil, rubber,
     lambda: ptile((196, 198, 192), 21), lambda: tile_carpet(22), lambda: ptile((214, 204, 184), 23),
+    lambda: wall(0), lambda: wall(1), lambda: wall(2),
 ]
 
 

@@ -1,4 +1,4 @@
-"""自作の家具・小物を描いて img/tiles/objects.png に書き出す（1マス48px、8列×6段）。
+"""自作の家具・小物を描いて img/tiles/objects.png に書き出す（1マス48px、8列×8段）。
 参考画像は寸法と描き込みの細かさだけ合わせ、デザインは自分で考えたもの（参考画像は写さない・リポジトリに入れない）。
 
 大学の教室・研究棟にある家具として、スチール（塗装した鋼板と、銀色のパイプ）を前提に描く。
@@ -21,7 +21,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 T = 48
-im = Image.new('RGBA', (T * 8, T * 6), (0, 0, 0, 0))
+im = Image.new('RGBA', (T * 8, T * 8), (0, 0, 0, 0))
 d = ImageDraw.Draw(im)
 px = im.load()
 OUT = (30, 30, 38)
@@ -591,6 +591,65 @@ def wide_shelf(c, r):     # スチールのオープン棚（2×2）：ファイ
         put(x + 3, yy + 23, (240, 242, 246))
 
 
+def blackboard(c, r):     # 黒板（3×2、壁につける）：アルミの枠、緑の板、消し跡、チョーク受け
+    """壁の中段（地図の y が壁の2段目）に置くと、板の下端が床から約20ドット（約75cm）、高さ約1.5mになる"""
+    x, y = cell(c, r)
+    W = T * 3
+    d.rectangle((x + 2, y + 28, x + W - 3, y + 72), fill=OUT)
+    gfill(x + 3, y + 29, x + W - 4, y + 71, SILVER, kx=(1.1, 0.88), spec=None)
+    d.line((x + 3, y + 29, x + W - 4, y + 29), fill=(240, 244, 250))
+    green = (52, 86, 70)
+    gfill(x + 6, y + 32, x + W - 7, y + 68, green, kx=(1.06, 0.92), ky=(1.04, 0.94), spec=(0.3, 0.18, 0.06), step=0.03)
+    d.line((x + 6, y + 32, x + W - 7, y + 32), fill=sh(green, 0.7))          # 枠の内側の影
+    d.line((x + 6, y + 32, x + 6, y + 68), fill=sh(green, 0.76))
+    rnd = random.Random(c * 7 + r)
+    for _ in range(9):                                                       # 消し跡（横に流れた白いかすれ）
+        sx, sy, ln = rnd.randint(10, W - 40), rnd.randint(36, 62), rnd.randint(14, 30)
+        for k in range(ln):
+            if rnd.random() < 0.7:
+                put(x + sx + k, y + sy + rnd.choice((0, 0, 1)), sh(green, 1.16))
+    for k in range(3):                                                       # うっすら残った字
+        yy = y + 38 + k * 8
+        xx = x + 14 + rnd.randint(0, 20)
+        for j in range(rnd.randint(4, 8)):
+            if rnd.random() < 0.8:
+                d.line((xx + j * 6, yy, xx + j * 6 + 3, yy + rnd.choice((0, 2))), fill=sh(green, 1.3))
+    d.rectangle((x + 1, y + 72, x + W - 2, y + 76), fill=OUT)                # チョーク受け
+    gfill(x + 2, y + 73, x + W - 3, y + 75, SILVER, kx=(1.1, 0.88), ky=(1.2, 0.8), spec=None)
+    for i, col in enumerate(((246, 246, 240), (240, 220, 90), (230, 110, 110))):
+        d.rectangle((x + 20 + i * 7, y + 72, x + 24 + i * 7, y + 73), fill=col)
+    d.rectangle((x + 100, y + 69, x + 112, y + 73), fill=OUT)                # 黒板消し
+    gfill(x + 101, y + 70, x + 111, y + 71, (70, 80, 120), spec=None)
+    d.line((x + 101, y + 72, x + 111, y + 72), fill=(220, 220, 214))
+
+
+def plant(c, r):         # 観葉植物（1×1）：白い陶器の鉢、葉の茂み
+    x, y = cell(c, r)
+    shadow(x + 11, y + 41, x + 37, y + 47)
+    leaf = (70, 140, 70)
+    tube_v(x + 23, y + 24, y + 34, 2, (120, 90, 60))                          # 幹
+    rnd = random.Random(4)
+    blobs = [(24, 10, 9), (15, 16, 8), (33, 16, 8), (19, 24, 7), (30, 25, 7), (24, 18, 8)]
+    for bx, by, rr in blobs:                                                 # 輪郭
+        d.ellipse((x + bx - rr - 1, y + by - rr - 1, x + bx + rr + 1, y + by + rr), fill=OUT)
+    for bx, by, rr in blobs:                                                 # 葉のかたまり（左上が明るい）
+        for yy in range(by - rr, by + rr):
+            for xx in range(bx - rr, bx + rr + 1):
+                dx, dy = (xx - bx) / rr, (yy - by) / rr
+                if dx * dx + dy * dy <= 1:
+                    k = 1.15 - 0.35 * (dx + dy) / 2 - 0.1 * (dy > 0.4)
+                    put(x + xx, y + yy, sh(leaf, round(k / 0.1) * 0.1))
+    for _ in range(40):                                                      # 葉先の光と葉の間の影
+        xx, yy = rnd.randint(9, 39), rnd.randint(2, 31)
+        if px[x + xx, y + yy][3] and px[x + xx, y + yy][:3] != OUT:
+            put(x + xx, y + yy, sh(leaf, rnd.choice((1.45, 0.62))))
+    d.rectangle((x + 15, y + 31, x + 32, y + 45), fill=OUT)                  # 鉢
+    cylinder(x + 16, y + 32, x + 31, y + 44, (232, 230, 224))
+    d.rectangle((x + 14, y + 30, x + 33, y + 33), fill=OUT)                  # 鉢の縁
+    cylinder(x + 15, y + 31, x + 32, y + 32, (244, 242, 238))
+    d.line((x + 17, y + 33, x + 30, y + 33), fill=(70, 54, 40))              # 土
+
+
 # ---------------- 配置（列, 段, 幅, 高さ, 名前）
 OBJECTS = [
     (0, 0, 1, 2, '自販機（赤）', lambda: vending(0, 0, (196, 50, 48), (236, 222, 214))),
@@ -618,6 +677,8 @@ OBJECTS = [
     (4, 4, 2, 1, '掲示板', lambda: board(4, 4, True)),
     (6, 4, 2, 1, 'ホワイトボード', lambda: board(6, 4, False)),
     (4, 5, 2, 1, 'ソファ', lambda: sofa(4, 5)),
+    (0, 6, 3, 2, '黒板', lambda: blackboard(0, 6)),
+    (3, 6, 1, 1, '観葉植物', lambda: plant(3, 6)),
 ]
 
 if __name__ == '__main__':
