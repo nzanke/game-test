@@ -2,7 +2,7 @@
 
 使い方：python3 -I tools/sprites/make_tiles.py
   img/tiles/own.png   … 0列：階段（上り）　1列：階段（下り）
-  img/tiles/floor.png … 床タイル 8列×2段（並べても継ぎ目が出ないように描く。記号は system.js の legend の A〜P）
+  img/tiles/floor.png … 床タイル 8列×3段（並べても継ぎ目が出ないように描く。記号は system.js の legend の A〜P）
     1段目：市松 石 レンガ 大理石 赤じゅうたん 人工芝 体育館の床 コンクリート
     2段目：縞鋼板 グレーチング 点字ブロック（線） 点字ブロック（点） 濃い木の床 青じゅうたん 土 ゴムマット
 """
@@ -219,10 +219,55 @@ def rubber():    # 黒いゴムマット（横じま）
     return im
 
 
+def ptile(base, seed):   # 大学の教室・廊下のPタイル（30cm角を半マスに4枚、まだらの模様、目地は上と左だけで継ぎ目が出ない）
+    im, d = tile(base)
+    rnd = random.Random(seed)
+    px = im.load()
+    for i in range(2):
+        for j in range(2):
+            k0 = 1 + rnd.uniform(-0.025, 0.025)
+            for y in range(24):
+                for x in range(24):
+                    px[j * 24 + x, i * 24 + y] = shade(base, k0)
+    for _ in range(110):   # まだらの小さな斑点（明るい・暗い）
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        k = rnd.choice((0.92, 0.95, 1.05, 1.07))
+        px[x, y] = shade(px[x, y], k)
+        if rnd.random() < 0.4 and x + 1 < T:
+            px[x + 1, y] = shade(px[x + 1, y], (k + 1) / 2)
+    for i in range(2):     # 目地と、タイルの縁の光
+        d.line((0, i * 24, T - 1, i * 24), fill=shade(base, 0.8))
+        d.line((i * 24, 0, i * 24, T - 1), fill=shade(base, 0.8))
+        d.line((1, i * 24 + 1, T - 1, i * 24 + 1), fill=shade(base, 1.05))
+    for (x, y) in ((6, 9), (31, 35)):   # ワックスの光
+        d.line((x, y, x + 4, y), fill=shade(base, 1.1))
+    return im
+
+
+def tile_carpet(seed):   # タイルカーペット（50cm角、毛の流れを1枚ごとに縦横で交互に）
+    base = (104, 110, 120)
+    im, d = tile(base)
+    rnd = random.Random(seed)
+    px = im.load()
+    for i in range(2):
+        for j in range(2):
+            vert = (i + j) % 2 == 0
+            for y in range(24):
+                for x in range(24):
+                    q = (x if vert else y) % 2
+                    k = (0.97 if q else 1.03) + rnd.uniform(-0.04, 0.04)
+                    px[j * 24 + x, i * 24 + y] = shade(base, k)
+    for i in range(2):
+        d.line((0, i * 24, T - 1, i * 24), fill=shade(base, 0.86))
+        d.line((i * 24, 0, i * 24, T - 1), fill=shade(base, 0.86))
+    return im
+
+
 FLOORS = [
     checker, stone, brick, marble, lambda: carpet((150, 40, 46), (124, 30, 36), 6), turf, gym, concrete,
     checkered_plate, grating, lambda: tactile(False), lambda: tactile(True), dark_wood,
     lambda: carpet((52, 74, 140), (40, 58, 116), 7), soil, rubber,
+    lambda: ptile((196, 198, 192), 21), lambda: tile_carpet(22), lambda: ptile((214, 204, 184), 23),
 ]
 
 
@@ -234,7 +279,7 @@ def main():
     stairs(d, 0, True)
     stairs(d, T, False)
     im.save(out / 'own.png')
-    sheet = Image.new('RGBA', (T * 8, T * 2), (0, 0, 0, 0))
+    sheet = Image.new('RGBA', (T * 8, T * 3), (0, 0, 0, 0))
     for i, fn in enumerate(FLOORS):
         sheet.paste(fn(), ((i % 8) * T, (i // 8) * T))
     sheet.save(out / 'floor.png')

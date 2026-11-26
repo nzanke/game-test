@@ -10,13 +10,13 @@ G.defineMap('escape', {
     '###44444444447###',
     '###55555555558###',
     '###66666666669###',
-    '###..........P###',  // 扉の前にゴムマット（記号 P）
-    '###...........###',
-    '###...........###',
-    '###...........###',
-    '###...........###',
-    '###...........###',
-    '###...........###',
+    '###QQQQQQQQQQP###',  // 床は灰色のPタイル（記号 Q）、扉の前にゴムマット（記号 P）
+    '###QQQQQQQQQQQ###',
+    '###QQQQQQQQQQQ###',
+    '###QQQQQQQQQQQ###',
+    '###QQQQQQQQQQQ###',
+    '###QQQQQQQQQQQ###',
+    '###QQQQQQQQQQQ###',
     '#################',
     '#################',
   ],
@@ -24,17 +24,20 @@ G.defineMap('escape', {
     { tile: [I, 0, 25, 3, 2], x: 4, y: 1, solid: false },              // 黒板
     { tile: [I, 0, 25, 3, 2], x: 7, y: 1, solid: false },              // 黒板
     { tile: [I, 5, 19], x: 11, y: 2, solid: false },                    // 時計
-    { tile: [I, 7, 9, 1, 2], x: 3, y: 3, solid: 'bottom' },            // 本棚
-    { tile: [I, 6, 34, 1, 2], x: 6, y: 4 },                            // 教卓
-    { tile: [I, 6, 30, 1, 2], x: 5, y: 8 }, { tile: [I, 6, 30, 1, 2], x: 8, y: 8 },
-    { tile: [I, 6, 30, 1, 2], x: 11, y: 8 },                            // 生徒の机
     { tile: [I, 7, 34, 1, 2], x: 13, y: 9 },                           // 植木
-    // 自作の家具・小物（data/tilesets/objects.js）
-    { tile: ['objects', 0, 0, 1, 2], x: 10, y: 3, solid: 'bottom' },   // 自販機（赤）
+    // 自作の家具・小物（data/tilesets/objects.js。スチール製）
+    { tile: ['objects', 4, 0, 1, 2], x: 3, y: 3, solid: 'bottom' },    // スチール書庫
     { tile: ['objects', 3, 0, 1, 2], x: 4, y: 3, solid: 'bottom' },    // ロッカー
-    { tile: ['objects', 6, 2, 1, 1], x: 11, y: 4 },                    // ごみ箱
-    { tile: ['objects', 1, 2, 1, 1], x: 5, y: 10 }, { tile: ['objects', 1, 2, 1, 1], x: 8, y: 10 },
-    { tile: ['objects', 1, 2, 1, 1], x: 11, y: 10 },                   // 生徒の机の椅子（後ろ向き）
+    { tile: ['objects', 0, 0, 1, 2], x: 10, y: 3, solid: 'bottom' },   // 自販機（赤）
+    { tile: ['objects', 7, 1, 1, 1], x: 11, y: 4 },                    // ごみ箱
+    { tile: ['objects', 5, 2, 2, 1], x: 6, y: 5 },                     // 教卓
+    // 長机（3人掛け）と椅子（後ろ向き）：左右2列×2段
+    { tile: ['objects', 0, 2, 3, 1], x: 4, y: 7 }, { tile: ['objects', 0, 2, 3, 1], x: 9, y: 7 },
+    { tile: ['objects', 0, 2, 3, 1], x: 4, y: 9 }, { tile: ['objects', 0, 2, 3, 1], x: 9, y: 9 },
+    { tile: ['objects', 0, 3, 1, 1], x: 4, y: 8 }, { tile: ['objects', 0, 3, 1, 1], x: 5, y: 8 }, { tile: ['objects', 0, 3, 1, 1], x: 6, y: 8 },
+    { tile: ['objects', 0, 3, 1, 1], x: 9, y: 8 }, { tile: ['objects', 0, 3, 1, 1], x: 10, y: 8 }, { tile: ['objects', 0, 3, 1, 1], x: 11, y: 8 },
+    { tile: ['objects', 0, 3, 1, 1], x: 4, y: 10 }, { tile: ['objects', 0, 3, 1, 1], x: 5, y: 10 }, { tile: ['objects', 0, 3, 1, 1], x: 6, y: 10 },
+    { tile: ['objects', 0, 3, 1, 1], x: 9, y: 10 }, { tile: ['objects', 0, 3, 1, 1], x: 10, y: 10 }, { tile: ['objects', 0, 3, 1, 1], x: 11, y: 10 },
   ],
   events: [
     {
@@ -87,13 +90,13 @@ G.defineMap('escape', {
       ['text', 'ぼたん', '寮の近くの居酒屋、今日は半額の日でしたねぇ……。'],
     ] }] },
     { id: 'shelf', x: 3, y: 4, pages: [{ list: [
-      ['text', '', '本棚。分厚い専門書が並んでいる。'],
+      ['text', '', 'スチールの書庫。ガラス戸の奥に、分厚いファイルと専門書が並んでいる。'],
       ['text', 'ぼたん', '先輩、これ全部読んだんですかぁ？'],
     ] }] },
     { id: 'desk', x: 6, y: 5, pages: [{ list: [
       ['text', '', '教卓。ゼミの資料が積んである。'],
     ] }] },
-    { id: 'seat', x: 8, y: 9, pages: [{ list: [
+    { id: 'seat', x: 5, y: 7, pages: [{ list: [
       ['text', '', '机。だれかの飲みかけの缶コーヒーが置きっぱなしだ。'],
       ['text', 'ぼたん', 'お酒だったらよかったのになぁ。'],
     ] }] },

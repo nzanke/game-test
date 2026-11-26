@@ -68,5 +68,8 @@ G.defineSystem({
     'N': { tile: ['floor', 5, 1] },  // 青いじゅうたん
     'O': { tile: ['floor', 6, 1] },  // 土・砂
     'P': { tile: ['floor', 7, 1] },  // ゴムマット
+    'Q': { tile: ['floor', 0, 2] },   // 灰色のPタイル（大学の教室）
+    'R': { tile: ['floor', 1, 2] },   // タイルカーペット
+    'S': { tile: ['floor', 2, 2] },   // ベージュのPタイル
   },
 });
