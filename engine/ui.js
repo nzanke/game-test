@@ -130,6 +130,14 @@
     },
     drawPortrait(ctx, P, pt, who) {
       const im = G.img(pt.img);
+      if (im && pt.crop) { // crop: [x, y, 幅, 高さ]（元の絵のどこを見せるか）。その範囲を枠の高さいっぱいに拡大し、左右中央。はみ出しは切る
+        const [sx, sy, sw, sh] = pt.crop, k = P.h / sh, dw = sw * k;
+        ctx.save(); ctx.imageSmoothingEnabled = !pt.pixel; ctx.imageSmoothingQuality = 'high';
+        ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+        ctx.drawImage(im, sx, sy, sw, sh, P.x + (P.w - dw) / 2, P.y, dw, P.h);
+        ctx.restore();
+        return;
+      }
       if (im) { // 画像は枠の高さに合わせ、下そろえ・左右中央
         const k = Math.min(P.h / im.height, P.w / im.width);
         const w = im.width * k, h = im.height * k;

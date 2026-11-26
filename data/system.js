@@ -15,7 +15,7 @@ G.defineSystem({
   // 立ち絵。img に画像（下そろえで枠の高さに合わせる）を書く。img がないと仮の人影
   portraits: {
     'ぼたん': { color: '#d99da6' },
-    'かなで': { color: '#8a7a95', img: 'img/portraits/kanade.png' },  // ドット絵の立ち絵なら pixel: true
+    'かなで': { color: '#8a7a95', img: 'img/portraits/kanade.png', crop: [62, 0, 402, 760] },  // crop：腰から上を拡大して見せる。ドット絵の立ち絵なら pixel: true
   },
   // 最初にいる場所
   start: { map: 'escape', x: 7, y: 6, dir: 'right' },

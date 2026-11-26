@@ -2,7 +2,7 @@
 
 ブラウザで動く自作のアドベンチャー／RPGエンジンと、その中身。ビルドは不要で、`index.html` を開けば動く。GitHub Pages で公開している。
 
-- いまのゲームは、ひと部屋の「放課後の教室」（`data/maps/escape.js`）で、システムとデザインの土台づくりの段階（謎解きはまだ入れない。家具は調べると一言出るだけ）。登場人物はぼたん（主人公、botan_chibi）とかなで（kanade_chibi）の2人だけ。部屋は17×13マスの地図のまん中に床が横11×縦7マス（まわりは暗い外側。tools/check.js が地図の横幅17マス以上を求めるため）。調べられるものの「！」は距離に関係なく常に出す（system.js の sensor: { always: true }）。立ち絵はコードで描かない（図形の組み合わせではアニメの立ち絵の水準にならない）。ユーザーが用意した画像（例：かなでは ChatGPT で生成したもの）を `python3 -I tools/sprites/cut_portrait.py 元.png img/portraits/名前.png` で白い背景を抜いて余白を切り詰め、system.js の portraits の img に書く（立ち絵は枠に収まるよう縮めて下そろえ。イラストはなめらかに描き、ドット絵の立ち絵だけ pixel: true で補正を切る）
+- いまのゲームは、ひと部屋の「放課後の教室」（`data/maps/escape.js`）で、システムとデザインの土台づくりの段階（謎解きはまだ入れない。家具は調べると一言出るだけ）。登場人物はぼたん（主人公、botan_chibi）とかなで（kanade_chibi）の2人だけ。部屋は17×13マスの地図のまん中に床が横11×縦7マス（まわりは暗い外側。tools/check.js が地図の横幅17マス以上を求めるため）。調べられるものの「！」は距離に関係なく常に出す（system.js の sensor: { always: true }）。立ち絵はコードで描かない（図形の組み合わせではアニメの立ち絵の水準にならない）。ユーザーが用意した画像（例：かなでは ChatGPT で生成したもの）を `python3 -I tools/sprites/cut_portrait.py 元.png img/portraits/名前.png` で白い背景を抜いて余白を切り詰め、system.js の portraits の img に書く（crop で腰から上などを切り抜いて枠の高さいっぱいに拡大できる。かなでは腰の帯の下まで。crop がないと全身を枠に収める。イラストはなめらかに描き、ドット絵の立ち絵だけ pixel: true で補正を切る）
 - 中身（部屋・会話・アイテム）は `data/` に書く。書式は `DATA_FORMAT.md` に全部ある
 - エンジンは `engine/`（core 入力・音・ループ／world 部屋・キャラ・イベント起動・条件・描画／interpreter 命令／ui 文章・選択肢・メニュー・セーブ・タイトル）
 - 新しい命令は `engine/interpreter.js` の `CMD` に足し、`DATA_FORMAT.md` にも書く。条件を足したら `tools/check.js` の `COND_KEYS` も直す

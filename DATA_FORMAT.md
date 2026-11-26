@@ -219,6 +219,14 @@ card1: { type: 'card', name: '朝のカード', color: '#e3a33b', img: 'img/card
 
 `type: 'card'` はカード画面に並ぶ（定義した順）。`hidden: true` はアイテム画面に出さない。
 
+## 立ち絵（system.js の portraits）
+
+```js
+'かなで': { color: '#8a7a95', img: 'img/portraits/kanade.png', crop: [62, 0, 402, 760] },
+```
+
+`img` がないと仮の人影。`crop: [x, y, 幅, 高さ]` は元の絵のどこを見せるか（その範囲を枠の高さいっぱいに拡大し、左右中央、はみ出しは切る。腰から上などに）。`crop` がないと全身を枠に収める。`pixel: true` はドット絵の立ち絵（拡大してもぼかさない）。
+
 ## 操作
 
 | 操作 | キーボード | スマホ |
