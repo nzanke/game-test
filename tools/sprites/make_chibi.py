@@ -344,6 +344,76 @@ def head(a, c, side):
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
 
 
+HAIR_TONES = ['#a3aee6', '#6873b0', '#454d84', '#30365e', '#1e2240']  # 女子の髪：光・明・中・暗・影
+
+
+def hair_shade(im, c, side):
+    """女子の髪を束ごとに塗り分ける（髪の色だけを塗り直す。輪郭や飾りはそのまま）。
+    頭頂：つむじから放射状の束、境目は暗い線、頭の丸みに沿った天使の輪（束の真ん中だけいちばん明るい）。
+    前髪：毛先の束ごと、上が明るく下ほど暗い、束の真ん中に光の筋。横・後ろの髪：縦の束、左が明るく右と下が暗い"""
+    import math
+    T = [rgb(h) for h in HAIR_TONES]
+    src = {tuple(c[k][:3]) for k in ('hair1', 'hair2', 'hairL')}
+    px = im.load()
+    front = side == 'down'
+    cx0 = -4 if side == 'left' else 0   # 横向きはつむじが後ろ寄り
+    tips = [(-12.4, -8.2), (-8.8, -4.6), (-4.6, -1.8), (-1.6, 1.6), (1.8, 4.6), (4.6, 8.8), (8.2, 12.4)]
+    bx = [(-12.4 + -8.2) / 2] + [(t0 + t1) / 2 for t0, t1 in tips[1:]]
+
+    def strand(x, y):  # 頭頂の束の番号と、束の中の位置（0〜1）
+        th = math.atan2(x - cx0, y + 3)
+        v = th / 0.24 + 0.5
+        return math.floor(v), v - math.floor(v)
+    if side == 'up':
+        strand = lambda x, y, _s=strand: (lambda th: (math.floor(th / 0.2 + 0.5), th / 0.2 + 0.5 - math.floor(th / 0.2 + 0.5)))(math.atan2(x, y - 2))
+
+    for Y in range(FH):
+        for X in range(FW):
+            p = px[X, Y]
+            if p[3] < 128 or tuple(p[:3]) not in src:
+                continue
+            x, y = X - CX + 0.5, Y + 0.5
+            if front and y >= 18 and abs(x) < 9.6:   # 前髪
+                k = sum(1 for b in (-8.5, -4.7, -1.7, 1.7, 4.7, 8.5) if x > b)
+                edges = [-8.5, -4.7, -1.7, 1.7, 4.7, 8.5]
+                left = max([b for b in edges if b < x], default=-12.4)
+                right = min([b for b in edges if b > x], default=12.4)
+                t = 2 if y < 21 else 3 if y < 23.5 else 4
+                if abs(x - left) < 0.6 or abs(x - right) < 0.6:
+                    t = 4  # 束の境目
+                elif abs(x - (left + right) / 2) < 0.6 and 18.5 < y < 22:
+                    t = 1 if k % 2 else 2 if y > 20.5 else 1  # 束の真ん中の光の筋
+                    if k % 2 and y < 20:
+                        t = 0
+            elif y >= 16 and abs(x) >= 9.6 and side == 'down':   # 顔の横の髪・後ろ髪（縦の束）
+                t = 2
+                if (X - CX) % 3 == 0:
+                    t = 3  # 縦の束の境目
+                elif (X - CX) % 3 == 1 and y < 27:
+                    t = 1  # 束の光
+                if y > 30:
+                    t = min(4, t + 1)
+                if x > 0:
+                    t = min(4, t + 1)  # 右側は陰
+            else:   # 頭頂（後ろ向き・横向きは頭全体）。つむじから放射状の束と、ギザギザの天使の輪
+                n, f = strand(x, y)
+                band = (11.2 if side != 'up' else 13.5) + 0.018 * (x - cx0) ** 2 + [0, 1, 0.5, -0.5][n % 4]
+                t = 2 if y < band + 2.5 else 3
+                if y > band + 9:
+                    t = 4 if f < 0.2 else 3
+                if abs(y - band) < 1.1:
+                    t = 1
+                    if abs(y - band) < 0.6 and 0.25 < f < 0.75:
+                        t = 0
+                if f < 0.2 and y > band - 3:
+                    t = 2 if abs(y - band) < 1.1 else max(t, 3)  # 束の境目（輪の中では1段だけ暗く）
+                if x - cx0 < -6 and 2 <= t <= 3 and y < band + 6:
+                    t -= 1  # 左上から光
+                if x - cx0 > 8 and y > band + 1:
+                    t = min(4, t + 1)
+            px[X, Y] = T[t] + (255,)
+
+
 Art = Pixel  # 塗り方：Pixel（くっきりしたドット絵）／Chibi（イラストを縮めた柔らかい塗り）
 
 
@@ -354,6 +424,8 @@ def frame(ch, d, step):
     body(a, c, side, step, side == 'up')
     up = Art()
     head(up, c, side)
+    if c['girl'] and Art is Pixel:
+        hair_shade(up.im, c, side)
     im = a.im
     bob = 0 if step == 1 else (1 if Art is Pixel else round(0.6 * SS))
     im.alpha_composite(up.im, (0, bob))
