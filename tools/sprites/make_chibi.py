@@ -119,35 +119,23 @@ def body(a, c, side, step, back):
     la, ra = {0: (1.2, 0), 1: (0, 0), 2: (0, 1.2)}[step]
     if side == 'left':
         sw = {0: -1.6, 1: 0, 2: 1.6}[step]
-        if step == 1:
-            if girl:
-                a.part([('r', -2, 43, 1.6, 46.2)], c['leg'], c['leg'], line=c['line'], lw=0.6)
-            a.part([('e', -4.8, 45.6, 2, 47.4)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
-        else:
-            if girl:
-                a.part([('p', [(0, 43), (2.6, 43), (4.6, 45.8), (2, 46)]), ('p', [(-3, 43), (-0.4, 43), (-2.6, 46.2), (-5, 45.8)])], c['leg'], c['leg'], line=c['line'], lw=0.6)
-            a.part([('e', 1.6, 45, 6.6, 46.8)], c['shoe2'], c['shoe2'], line=c['line'], lw=0.7)
-            a.part([('e', -7.4, 45.6, -1.6, 47.4)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
         if girl:
-            a.part([('p', [(-5.8, 37.4), (5.8, 37.4), (7.6, 44.2), (-7.6, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(-5.8, 37.4), (5.8, 37.4), (7.6, 45), (-7.6, 45)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         else:
-            a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 45.8), (-4.4, 45.8)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 45), (-4.4, 45)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         a.part([('p', [(-3.8, 34), (4, 34), (4.4, 39.4), (-4.2, 39.4)]), ('e', -6.4, 31.4, 6.4, 37)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
         a.part([('p', [(-1.8, 33.2), (2, 33.2), (2 + sw, 38.4), (-1.8 + sw, 38.4)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
         a.part([('e', -2.3 + sw, 37.2, 2.3 + sw, 41.4)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.5)
         if girl:
             a.part([('p', [(-5.4, 32.6), (-3, 32.6), (-4, 35.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+        feet(a, c, 'side', step)
         return
     # 脚と靴（靴は甲が見える）
-    for x0, x1, l in ((-5, -1, la), (1, 5, ra)):  # 上から見下ろすので、脚は短く、靴は平たく小さい
-        if girl:
-            a.part([('r', x0 + 0.8, 43, x1 - 0.8, 46.2 - l)], c['leg'], c['leg'], line=c['line'], lw=0.6)
-        a.part([('e', x0, 45.6 - l, x1, 47.4 - l)], c['shoe1'], c['shoe2'], light=(210, 180, 160), line=c['line'], lw=0.7, la=0.6)
     if girl:
-        a.part([('p', [(-5.6, 37.4), (5.6, 37.4), (7.8, 44.2), (-7.8, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        a.part([('p', [(-5.6, 37.4), (5.6, 37.4), (7.8, 45), (-7.8, 45)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     else:
         for x0, x1, l in ((-4.6, -0.4, la), (0.4, 4.6, ra)):
-            a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 45.8 - l), (x0, 45.8 - l)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 45), (x0, 45)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     for s in (-1, 1):  # 腕：大きな肩から外へ開く
         a.part([('p', [(s * 7.2, 35.4), (s * 9.8, 35.4), (s * 10.8, 38.4), (s * 8.4, 39.2)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
     # 胴は細く、肩は大きく（上から見下ろすので、肩の丸みと上の面が見える）
@@ -165,6 +153,24 @@ def body(a, c, side, step, back):
             a.clip(m, [('r', -0.2, 35, 0.2, 38.4)], c['topLine'], 0.7)
     if not girl:
         a.part([('r', -5.6, 38.2, 5.6, 39.6)], c['ribbon1'], c['ribbon2'], lw=0.4)  # ベルト
+    feet(a, c, 'front', step)
+
+
+def feet(a, c, side, step):
+    """手本どおり、脚1ドット・靴1ドット（上から見下ろすので足元はごく小さい）。歩くと上げた足が1ドット上がる"""
+    leg = c['leg'] if c['girl'] else c['low2']
+    pal = {'o': c['line'], 'l': leg, 's': c['shoe1'], 'd': c['shoe2']}
+    if side == 'front':
+        lift = {0: (1, 0), 1: (0, 0), 2: (0, 1)}[step]
+        for x0, l in ((-5, lift[0]), (1, lift[1])):
+            rows = ['ollllo', 'osssso'] if not l else ['osssso']
+            a.dots(x0, 46 - l if not l else 45, rows, pal)
+    else:
+        if step == 1:
+            a.dots(-4, 46, ['ollllo', 'osssso'], pal)
+        else:
+            a.dots(1, 45, ['odddo'], pal)          # 奥の足（上がっている）
+            a.dots(-6, 46, ['ollllo', 'osssso'], pal)
 
 
 # ---------------- 頭（大きく、前髪は目のすぐ上まで、目は大きく下寄り） ----------------
