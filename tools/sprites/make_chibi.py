@@ -547,7 +547,10 @@ def long_hair_back(c, side):
     if side == 'down':
         a.part([('p', [(-15.6, 16), (15.6, 16), (16.6, 38 - d), (14.4, 43.6 - d), (11, 42.4 - d), (8, L), (-8, L), (-11, 42.4 - d), (-14.4, 43.6 - d), (-16.6, 38 - d)])],
                c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
-    else:  # 横向き：背中側に流れる
+    elif c.get('long_style') == 'straight':  # 横向き・まっすぐ：背中に沿って細く、まっすぐ下りる
+        a.part([('p', [(1, 14), (15.2, 14), (15, 30), (13.6, L - 1), (12, L), (9.6, L - 0.6), (7, L), (4.6, L - 1), (3.6, 30)])],
+               c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
+    else:  # 横向き・ふんわり：背中側に広がって流れる
         a.part([('p', [(1, 14), (15.6, 14), (16.4, 34 - d), (15.6, 41 - d), (12.4, L), (9.6, 41.6 - d), (6, 43.6 - d), (3.4, 36 - d), (3, 30)])],
                c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
     return a
@@ -568,7 +571,7 @@ def head(a, c, side):
         return
     if side == 'left':
         # 横向き：顔は頭の前・下寄り（x −12〜+1）、後ろに耳。いちばん前の前髪は額の前に垂れる
-        if girl:  # 後ろ髪はあごの高さまで
+        if girl and not c.get('long'):  # 後ろ髪はあごの高さまで（長い髪の子は後ろ髪の層だけで描く）
             a.part([('p', [(1, 14), (15.6, 14), (15.4, 32.6), (10.4, 35.2), (3, 32)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         hm = a.part([('e', -14.2, 7 if girl else 6.4, 14.6, 33)], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         if isinstance(a, Pixel):
@@ -780,6 +783,8 @@ BANGS_SIDE = (-16, 10, [
 
 def bangs_side(im, c):
     x0, y0, rows = BANGS_SIDE
+    if c.get('bangs') == 'straight':  # まっすぐな前髪：束の間から額をのぞかせず、毛先を目の上でそろえる
+        rows = [''.join('D' if ch in '1234' and y0 + j < 24 else ch for ch in r) for j, r in enumerate(rows)]
     if c['girl']:
         t = [rgb(h) for h in c.get('tones', HAIR_TONES)]
     else:
