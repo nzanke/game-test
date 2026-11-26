@@ -1,4 +1,4 @@
-"""キャラクターの歩行グラフィックを一から描いて img/chars/*.png に書き出す（1コマ64×96px、等倍表示）。
+"""キャラクターの歩行グラフィックを一から描いて img/chars/*.png に書き出す（1コマ72×105px＝参考と同じ、等倍表示）。
 比率は参考のドットを測って合わせた。マップに合わせて、やや上から見下ろす角度で描く（頭頂の髪が厚く、顔と目は頭の下寄り、首はほぼ見えず、胴と脚は縦に詰まり、靴は甲が見える）。
 
 使い方：python3 tools/sprites/make_chars.py
@@ -10,8 +10,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
-FW, FH = 64, 96
-CX = 32
+FW, FH = 72, 105  # 参考のドットと同じ1コマの大きさ
+CX = 36
+SY, OY = 1.02, 8  # 全身の高さを参考と同じ約94pxに（上端 y≈10、足元 y≈103）
 OUTLINE = (38, 26, 26, 255)
 
 
@@ -33,8 +34,8 @@ class Pen:
 
     def t(self, x, y):
         if self.k != 1:  # 頭
-            return (round(CX + x * HEAD_KX), round(y * HEAD_KY))
-        return (round(CX + x * KX), round(body_y(y)))
+            return (round(CX + x * HEAD_KX), round(OY + y * HEAD_KY * SY))
+        return (round(CX + x * KX), round(OY + body_y(y) * SY))
 
     def b(self, box):
         x0, y0, x1, y1 = box
@@ -73,7 +74,7 @@ HEAD_KX, HEAD_KY = 1.0, 1.12  # 頭の倍率（横・縦）
 HEAD_K = 1.12
 # やや上から見下ろす角度：胴から下の縦位置を、参考を測った比率に合わせて詰める
 # （あご≒全身の39%、胴は短く、スカートは55〜83%、靴は87〜99%）
-BODY_Y = [(0, 0), (44, 40), (56, 52), (80, 80), (91, 92), (96, 96)]
+BODY_Y = [(0, 0), (44, 43), (56, 54), (80, 80), (91, 92), (96, 96)]  # 44→43：あごの下に首を見せる
 
 
 def body_y(y):
@@ -131,11 +132,6 @@ def legs_side(p, ch, step):
 # ---------------- 胴（短め） ----------------
 def body_front(p, ch, back=False):
     girl = ch['gender'] == 'girl'
-    for s in (-1, 1):  # 腕（半袖）
-        x0 = -16 if s < 0 else 12
-        p.rect((x0, 44, x0 + 4, 51), 'W', 'w')
-        p.rect((x0 + 1, 52, x0 + 3, 62), 'S', 's')
-        p.rect((x0, 62, x0 + 3, 65), 'S')
     if girl:  # 裾の広がったスカート
         p.poly([(-11, 55), (11, 55), (18, 80), (-18, 80)], 'K')
         for x in (-10, -4, 4, 10):
@@ -157,6 +153,16 @@ def body_front(p, ch, back=False):
         p.poly([(-3, 51), (3, 51), (2, 56), (-2, 56)], 'R')
         p.poly([(-3, 51), (-7, 54), (-3, 54)], 'R')
         p.poly([(3, 51), (7, 54), (3, 54)], 'R')
+    arms_front(p)
+
+
+def arms_front(p):
+    """腕（半袖）：肩から外へ開き、手はスカートの横に出す"""
+    for s in (-1, 1):
+        p.poly([(s * 10, 44), (s * 14, 44), (s * 17, 51), (s * 13, 52)], 'w')
+        p.poly([(s * 10, 44), (s * 13, 44), (s * 16, 50), (s * 13, 51)], 'W')
+        p.poly([(s * 13, 52), (s * 16, 51), (s * 20, 61), (s * 17, 62)], 'S')
+        p.ell((s * 19 - 3, 59, s * 19 + 3, 66), 'S', 's')
 
 
 def body_side(p, ch, step):
@@ -175,7 +181,7 @@ def body_side(p, ch, step):
         p.poly([(-9, 48), (-6, 48), (-6, 54), (-9, 54)], 'R')
     p.rect((-2, 45, 3, 51), 'W', 'w')  # 手前の腕（歩くと前後にふれる）
     p.poly([(-1, 52), (2, 52), (2 + swing, 62), (-1 + swing, 62)], 'S')
-    p.rect((-1 + swing, 62, 2 + swing, 64), 'S')
+    p.ell((-2 + swing, 60, 3 + swing, 66), 'S', 's')
 
 
 # ---------------- 頭 ----------------
@@ -194,7 +200,9 @@ def head_front(p, ch):
         p.poly([(5, 3), (15, -1), (11, 7)], 'H')
         p.poly([(-15, 13), (-19, 19), (-14, 22)], 'H')
         p.poly([(15, 13), (19, 19), (14, 22)], 'H')
-    p.rect((-3, 33, 3, 37), 's')
+    p.rect((-3, 33, 3, 39), 's')
+    p.rect((-3, 34, 3, 36), 'n')  # あごの下の影
+    p.ell((-12, 13, 12, 36), 'o')  # あごの線
     p.ell((-11, 13, 11, 35), 'S', 's')
     if boy:
         p.poly([(-12, 12), (12, 12), (12, 22), (9, 18), (6, 23), (3, 17), (0, 23), (-3, 17), (-6, 23), (-9, 18), (-12, 22)], 'H')
@@ -231,7 +239,9 @@ def head_side(p, ch):
         p.poly([(10, 11), (18, 10), (12, 18)], 'H')
         p.poly([(-8, 4), (-6, -2), (0, 3)], 'H')
         p.poly([(8, 23), (14, 26), (8, 29)], 'H')
-    p.rect((-4, 33, 1, 37), 's')
+    p.rect((-4, 33, 1, 39), 's')
+    p.rect((-4, 34, 1, 36), 'n')
+    p.ell((-16, 13, 5, 36), 'o')
     p.ell((-15, 13, 4, 35), 'S', 's')
     p.poly([(2, 11), (14, 11), (14, 30), (7, 33), (2, 28)], 'H')
     if boy:
@@ -253,7 +263,8 @@ def head_side(p, ch):
 def head_back(p, ch):
     p.k = HEAD_K
     boy = ch['gender'] == 'boy'
-    p.rect((-3, 32, 3, 37), 's')
+    p.rect((-3, 32, 3, 39), 's')
+    p.rect((-3, 32, 3, 35), 'n')
     if not boy:
         p.rect((-13, 16, 13, 43), 'H', 'h')
         p.poly([(-12, 6), (-19, 9), (-20, 24), (-18, 46), (-15, 40), (-13, 16)], 'h')
@@ -305,8 +316,8 @@ def frame(ch, d, step):
         head_side(upper, ch)
     im = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
     # 全体を少し下げ、足元をコマの下端近くにそろえる
-    im.alpha_composite(lower.im, (0, 3))
-    im.alpha_composite(upper.im, (0, 3 + bob))
+    im.alpha_composite(lower.im, (0, 0))
+    im.alpha_composite(upper.im, (0, bob))
     im = outline(im)
     if d == 'right':
         im = im.transpose(Image.FLIP_LEFT_RIGHT)
@@ -319,7 +330,7 @@ CHARS = {
         'pal': {
             'H': '#3a3c44', 'h': '#25272d', 'L': '#6a6e7a',
             'S': '#f7dcc4', 's': '#e2b597', 'm': '#c9826e',
-            'W': '#f7f7f3', 'w': '#cdd0d8', 'P': '#2f3242', 'q': '#1f2130', 'B': '#2a2220', 'b': '#5a4a42',
+            'W': '#f7f7f3', 'w': '#cdd0d8', 'P': '#2f3242', 'q': '#1f2130', 'B': '#2a2220', 'b': '#5a4a42', 'n': '#d8a282', 'o': '#8a5a48',
         },
     },
     'yui': {
@@ -329,7 +340,7 @@ CHARS = {
             'S': '#f8ddc6', 's': '#e4b89b', 'p': '#f4aa9e', 'm': '#c9806c',
             'E': '#2e1d1a', 'I': '#8a4a2c', 'J': '#d4924f', 'e': '#ffffff',
             'W': '#f7f7f3', 'w': '#d0d3da', 'N': '#2f3e68', 'R': '#c8343f',
-            'K': '#2f3e68', 'k': '#1f2a4a', 'B': '#4a3226', 'b': '#7a5a44',
+            'K': '#2f3e68', 'k': '#1f2a4a', 'B': '#4a3226', 'b': '#7a5a44', 'n': '#d8a282', 'o': '#8a5a48',
         },
     },
 }
