@@ -129,7 +129,7 @@ def body(a, c, side, step, back):
             a.part([('e', 1.6, 45, 6.6, 46.8)], c['shoe2'], c['shoe2'], line=c['line'], lw=0.7)
             a.part([('e', -7.4, 45.6, -1.6, 47.4)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
         if girl:
-            a.part([('p', [(-5, 37.4), (5, 37.4), (6.6, 44.2), (-6.6, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(-5.8, 37.4), (5.8, 37.4), (7.6, 44.2), (-7.6, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         else:
             a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 45.8), (-4.4, 45.8)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         a.part([('p', [(-3.8, 34), (4, 34), (4.4, 39.4), (-4.2, 39.4)]), ('e', -6.4, 31.4, 6.4, 37)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
@@ -144,7 +144,7 @@ def body(a, c, side, step, back):
             a.part([('r', x0 + 0.8, 43, x1 - 0.8, 46.2 - l)], c['leg'], c['leg'], line=c['line'], lw=0.6)
         a.part([('e', x0, 45.6 - l, x1, 47.4 - l)], c['shoe1'], c['shoe2'], light=(210, 180, 160), line=c['line'], lw=0.7, la=0.6)
     if girl:
-        a.part([('p', [(-4.8, 37.4), (4.8, 37.4), (6.8, 44.2), (-6.8, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        a.part([('p', [(-5.6, 37.4), (5.6, 37.4), (7.8, 44.2), (-7.8, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     else:
         for x0, x1, l in ((-4.6, -0.4, la), (0.4, 4.6, ra)):
             a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 45.8 - l), (x0, 45.8 - l)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
