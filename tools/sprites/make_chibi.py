@@ -122,8 +122,8 @@ def body(a, c, side, step, back):
         sw = {0: -1, 1: 0, 2: 1}[step]
         if girl:
             span_part(a, SKIRT_SIDE_GIRL, c['low1'], c['low2'], c['line'], bottom_line=True)
-            for x, y0 in ((-5, 41), (-2, 41), (1, 42)):  # 折り目
-                a.dots(x, y0, ['p'] * (44 - y0), {'p': c['low2']})
+            for x, y0 in ((-5, 42), (-2, 42), (1, 43)):  # 折り目
+                a.dots(x, y0, ['p'] * (45 - y0), {'p': c['low2']})
             span_part(a, TORSO_SIDE_GIRL, c['top1'], c['top2'], c['topLine'])
         else:
             span_part(a, PANTS_SIDE_BOY, c['low1'], c['low2'], c['line'], bottom_line=True)
@@ -185,12 +185,17 @@ def feet(a, c, side, step):
         for x0, l in ((-5, lift[0]), (1, lift[1])):
             a.dots(x0, 45 - l, foot, pal)
     else:
-        if step == 1:  # 前後の足が並んで見える（奥の足を先に描く）
-            a.dots(-1, 45, ['olllo', 'odddo', 'odddo'], pal)
-            a.dots(-5, 45, foot, pal)
-        else:
-            a.dots(1, 44, ['olllo', 'odddo', 'odddo'], pal)  # 奥の足（上がっている）
-            a.dots(-6, 45, foot, pal)
+        # 横向き：脚1段＋靴1段の2段だけ（46・47行）。靴は脚より1ドット前に出たつま先で表す。輪郭は黒ではなく靴の暗い色
+        girl = c['girl']
+        pal = {'o': c['shoe2'], 'L': c['skin2'] if girl else c['low1'], 'l': c['skinS'] if girl else c['low2'],
+               'S': c['shoe1'], 's': c['shoe2']}
+        front = ('oLLo', 'oSSo')    # 前の足：脚 x0..x0+3、靴は1ドット前（x0−1..x0+2）
+        back = ('llls', 'SSSso')    # 後ろの足：奥なので脚は暗め、靴は x0−1..x0+3
+        # (前の足の x, 上げ, 後ろの足の x, 上げ)。上げた足は1ドット上がる
+        fx, fu, bx, bu = {0: (-7, 1, 3, 0), 1: (-3, 0, 1, 0), 2: (-5, 0, 3, 1)}[step]
+        for rows, x0, up in ((back, bx, bu), (front, fx, fu)):
+            a.dots(x0, 46 - up, [rows[0]], pal)
+            a.dots(x0 - 1, 47 - up, [rows[1]], pal)
 
 
 # ---------------- 頭（大きく、前髪は目のすぐ上まで、目は大きく下寄り） ----------------
@@ -304,9 +309,9 @@ FACE_SIDE_LINE = [(-12, 32), (-11, 33), (-10, 34), (-9, 34)] + [(x, 35) for x in
 # 横向きの胴：上は細く、前の縁を斜めに下へ広げて、下半身の広さとの落差を出す
 TORSO_SIDE_BOY = {36: (-4, 4), 37: (-5, 4), 38: (-5, 4), 39: (-6, 5), 40: (-6, 5)}
 BELT_SIDE_BOY = {41: (-6, 5)}
-PANTS_SIDE_BOY = {42: (-6, 4), 43: (-6, 4), 44: (-5, 4)}
+PANTS_SIDE_BOY = {42: (-6, 4), 43: (-6, 4), 44: (-5, 4), 45: (-4, 4)}  # 45行が裾の輪郭
 TORSO_SIDE_GIRL = {36: (-5, 4), 37: (-6, 4), 38: (-6, 4), 39: (-7, 4)}
-SKIRT_SIDE_GIRL = {40: (-7, 4), 41: (-7, 4), 42: (-8, 5), 43: (-8, 5), 44: (-8, 5)}
+SKIRT_SIDE_GIRL = {40: (-7, 4), 41: (-7, 4), 42: (-8, 5), 43: (-8, 5), 44: (-8, 5), 45: (-8, 5)}  # 45行が裾の輪郭
 
 
 def span_mask(spans):
