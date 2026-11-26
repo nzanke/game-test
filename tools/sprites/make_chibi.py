@@ -108,7 +108,7 @@ CHARS = {
     }),
     # ---- こすい：ユーザーの指定（くすんだピンクの太ももまでの長い髪、頭の上のとがった毛束、左右の黒い大きなリボン、
     # 青い目、笑った口、アイボリーのニットのタートルネックのワンピース、長い袖）。指定になかった靴はこげ茶のショートブーツ
-    'kosui_chibi': dict(BASE, girl=True, long=True, ahoge=True, bows=True, turtleneck=True, sleeves=True,
+    'kosui_chibi': dict(BASE, girl=True, eye='tare2', long=True, ahoge=True, bows=True, turtleneck=True, sleeves=True,
                         pleats=False, tie=False, hairclip=False,
                         tones=['#f6d0d5', '#EAB5BC', '#D99DA6', '#A87982', '#7a5560'], **{
         'skin1': '#FFF0E9', 'skin2': '#FFE0D5', 'skinS': '#E9B5AE', 'handO': '#c48a80', 'skinLine': '#8a5048',
@@ -310,6 +310,9 @@ EYE_TYPES = {
     # たれ目：目尻のまつげが1段下がり、下側が丸い。やさしい印象
     'tare': (['.EEEE', 'EgiiE', 'wiPiw', 'wIPIw', '.KKK.'],
              ['oooo..', 'oEEooo', '.IEggo', '.EDwgE', '.EIwg4', '.LLw..']),
+    # しっかりたれ目：目頭側が高く、目尻のまつげが2段下まで垂れる。横向きは上まぶたの線が目尻へ下がる
+    'tare2': (['..EEE', '.EiiE', 'EiPiw', 'wIPIw', '.KKK.'],   # 上まつげは目頭の上の段から目尻へ1段ずつ下がる斜めの線
+              ['ooo...', 'oEEoo.', '.IEggo', '.EDwgo', '.EIwgE', '.LLw..']),
     # つり目：目尻のまつげが上がり、縦に1段細い。きりっとした印象
     'tsuri': (['EE...', '.EEEE', 'giPiw', 'wIPIw', '.KKK.'],
               ['oooooE', 'oEEoE.', '.IEgg4', '.EDwg4', '.LLw..', '......']),
