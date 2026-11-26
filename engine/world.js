@@ -428,7 +428,20 @@
     ctx.save();
     ctx.globalAlpha = c.opacity;
     const im = G.img(look.img);
-    if (look.tile) {
+    if (look.sprite) {
+      // 歩行グラフィック：横3コマ（左足・立ち・右足）×縦4段（下・左・右・上）。1.5倍で描く
+      const sp = G.img(look.sprite);
+      if (sp) {
+        const fw = sp.width / 3, fh = sp.height / 4, k = look.scale || 1.5;
+        const row = { down: 0, left: 1, right: 2, up: 3 }[c.dir] || 0;
+        const col = c.moving ? [0, 1, 2, 1][Math.floor(c.stepAnim / 8) % 4] : 1;
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.beginPath(); ctx.ellipse(x + 24, y + 43, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sp, col * fw, row * fh, fw, fh, x + T / 2 - (fw * k) / 2, y + T - fh * k, fw * k, fh * k);
+        ctx.imageSmoothingEnabled = true;
+      }
+    } else if (look.tile) {
       const h = look.tile[4] || 1;
       G.drawTile(ctx, look.tile, x, y - (h - 1) * T, c.x);
     } else if (im) {

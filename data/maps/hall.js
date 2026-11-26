@@ -48,7 +48,7 @@ G.defineMap('hall', {
     {
       id: 'yui', x: 10, y: 5, dir: 'left',
       pages: [
-        { char: { shape: 'person', color: '#d0587a', hair: '#7a3b1e' }, autoMove: ['wait:90', 'face:down', 'wait:90', 'face:left'], list: [
+        { char: { sprite: 'img/chars/yui.png' }, autoMove: ['wait:90', 'face:down', 'wait:90', 'face:left'], list: [
           ['text', 'ユイ', 'おはよう、ハル。カード探し、手伝ってくれるの？'],
           ['choice', ['もちろん', 'あとでね'], [
             [
@@ -63,11 +63,11 @@ G.defineMap('hall', {
             ],
           ]],
         ] },
-        { cond: { self: 'A' }, char: { shape: 'person', color: '#d0587a', hair: '#7a3b1e' }, list: [
+        { cond: { self: 'A' }, char: { sprite: 'img/chars/yui.png' }, list: [
           ['text', 'ユイ', 'いま {v:cards} 枚だね。あと少し！'],
         ] },
         // カードが3枚そろったら（後ろのページほど優先）
-        { cond: [{ self: 'A' }, { var: ['cards', '>=', 3] }], char: { shape: 'person', color: '#d0587a', hair: '#7a3b1e' }, list: [
+        { cond: [{ self: 'A' }, { var: ['cards', '>=', 3] }], char: { sprite: 'img/chars/yui.png' }, list: [
           ['balloon', 'this', '♪'],
           ['text', 'ユイ', 'すごい、3枚そろったんだ！'],
           ['flash', [255, 240, 200], 40],
