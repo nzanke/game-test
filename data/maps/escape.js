@@ -29,6 +29,12 @@ G.defineMap('escape', {
     { tile: [I, 6, 30, 1, 2], x: 5, y: 8 }, { tile: [I, 6, 30, 1, 2], x: 8, y: 8 },
     { tile: [I, 6, 30, 1, 2], x: 11, y: 8 },                            // 生徒の机
     { tile: [I, 7, 34, 1, 2], x: 13, y: 9 },                           // 植木
+    // 自作の家具・小物（data/tilesets/objects.js）
+    { tile: ['objects', 0, 0, 1, 2], x: 10, y: 3, solid: 'bottom' },   // 自販機（赤）
+    { tile: ['objects', 3, 0, 1, 2], x: 4, y: 3, solid: 'bottom' },    // ロッカー
+    { tile: ['objects', 6, 2, 1, 1], x: 11, y: 4 },                    // ごみ箱
+    { tile: ['objects', 1, 2, 1, 1], x: 5, y: 10 }, { tile: ['objects', 1, 2, 1, 1], x: 8, y: 10 },
+    { tile: ['objects', 1, 2, 1, 1], x: 11, y: 10 },                   // 生徒の机の椅子（後ろ向き）
   ],
   events: [
     {
@@ -94,6 +100,17 @@ G.defineMap('escape', {
     { id: 'plant', x: 13, y: 10, pages: [{ list: [
       ['text', '', '窓ぎわの植木。'],
       ['text', 'ぼたん', 'ちゃんとお水もらえてるんですかねぇ。'],
+    ] }] },
+    { id: 'vending', x: 10, y: 4, pages: [{ list: [
+      ['text', '', '飲み物の自販機。'],
+      ['text', 'ぼたん', 'お酒は……売ってないですよねぇ。'],
+    ] }] },
+    { id: 'locker', x: 4, y: 4, pages: [{ list: [
+      ['text', '', 'スチールのロッカー。名札は空白のままだ。'],
+    ] }] },
+    { id: 'trash', x: 11, y: 4, pages: [{ list: [
+      ['text', '', 'ごみ箱。丸めたレポート用紙が入っている。'],
+      ['text', 'ぼたん', 'だれかの書きかけですかねぇ。'],
     ] }] },
     { id: 'door', x: 13, y: 3, pages: [{ list: [
       ['text', 'ぼたん', 'まだ先輩とお話ししていたいなぁ。'],
