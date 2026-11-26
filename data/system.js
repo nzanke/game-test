@@ -51,5 +51,22 @@ G.defineSystem({
     ':': { tile: ['school_in', [3, 4], 1] },  // 寄せ木の床
     ';': { tile: ['school_in', [5, 6], 1] },  // 灰色のじゅうたん
     '^': { tile: ['own', 0, 0] },              // 階段
+    // 自作の床タイル（data/tilesets/floor.js）
+    'A': { tile: ['floor', 0, 0] },   // 市松のタイル
+    'B': { tile: ['floor', 1, 0] },   // 石の床
+    'C': { tile: ['floor', 2, 0] },   // レンガ
+    'D': { tile: ['floor', 3, 0] },   // 大理石風のタイル
+    'E': { tile: ['floor', 4, 0] },   // 赤いじゅうたん
+    'F': { tile: ['floor', 5, 0] },   // 人工芝
+    'G': { tile: ['floor', 6, 0] },   // 体育館の床
+    'H': { tile: ['floor', 7, 0] },   // コンクリート
+    'I': { tile: ['floor', 0, 1] },   // 縞鋼板（金属）
+    'J': { tile: ['floor', 1, 1] },   // グレーチング（側溝のふた）
+    'K': { tile: ['floor', 2, 1] },  // 点字ブロック（線）
+    'L': { tile: ['floor', 3, 1] },  // 点字ブロック（点）
+    'M': { tile: ['floor', 4, 1] },  // 濃い木の床
+    'N': { tile: ['floor', 5, 1] },  // 青いじゅうたん
+    'O': { tile: ['floor', 6, 1] },  // 土・砂
+    'P': { tile: ['floor', 7, 1] },  // ゴムマット
   },
 });
