@@ -32,7 +32,7 @@ class Pen:
         return self.pal[k]
 
     def t(self, x, y):
-        return (round(CX + x * self.k), round(y * self.k))
+        return (round(CX + x * self.k * KX), round(y * self.k))
 
     def b(self, box):
         x0, y0, x1, y1 = box
@@ -66,6 +66,7 @@ class Pen:
 
 
 LIFT = {0: (3, 0), 1: (0, 0), 2: (0, 3)}  # コマごとに（左足、右足）を上げる量
+KX = 0.8  # 横幅の倍率（小さいほど細長い）
 HEAD_K = 1.27  # 頭の倍率（参考の比率：頭の高さは全身の約4割、頭の幅は肩幅と同じくらい）
 
 
