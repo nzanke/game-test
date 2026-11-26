@@ -1,0 +1,15 @@
+name: check-live
+on:
+  push:
+    branches: [check-live]
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s -D - "https://nzanke.github.io/game-test/index.html?nocache=$RANDOM" -o live.html | grep -i -E "^(HTTP|cache-control|age|last-modified|x-cache)"
+          echo "school_main1f: $(grep -c school_main1f live.html)"
+          grep -o 'engine/core.js[^"]*' live.html
+          curl -s -D - "https://nzanke.github.io/game-test/index.html" -o live2.html | grep -i -E "^(HTTP|cache-control|age|x-cache)"
+          echo "no-query school_main1f: $(grep -c school_main1f live2.html)"
+          curl -s "https://nzanke.github.io/game-test/data/maps/room1.js" | grep -n "back\|transfer"
