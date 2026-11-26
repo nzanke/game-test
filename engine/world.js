@@ -429,10 +429,10 @@
     ctx.globalAlpha = c.opacity;
     const im = G.img(look.img);
     if (look.sprite) {
-      // 歩行グラフィック：横3コマ（左足・立ち・右足）×縦4段（下・左・右・上）。1.5倍で描く
+      // 歩行グラフィック：横3コマ（左足・立ち・右足）×縦4段（下・左・右・上）
       const sp = G.img(look.sprite);
       if (sp) {
-        const fw = sp.width / 3, fh = sp.height / 4, k = look.scale || 1.5;
+        const fw = sp.width / 3, fh = sp.height / 4, k = look.scale || (fw >= 48 ? 1 : 1.5); // 48pxのコマは等倍
         const row = { down: 0, left: 1, right: 2, up: 3 }[c.dir] || 0;
         const col = c.moving ? [0, 1, 2, 1][Math.floor(c.stepAnim / 8) % 4] : 1;
         ctx.fillStyle = 'rgba(0,0,0,0.18)';
