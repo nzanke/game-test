@@ -106,6 +106,17 @@ CHARS = {
         'top1': '#2c3550', 'top2': '#1c2238', 'topLine': '#10131f', 'inner': '#ffffff', 'ribbon1': '#3f7fd0', 'ribbon2': '#1d4a86',
         'low1': '#2c3550', 'low2': '#1c2238', 'leg': '#2a2730', 'shoe1': '#5a3a2c', 'shoe2': '#24160e',
     }),
+    # ---- こすい：ユーザーの指定（くすんだピンクの太ももまでの長い髪、頭の上のとがった毛束、左右の黒い大きなリボン、
+    # 青い目、笑った口、アイボリーのニットのタートルネックのワンピース、長い袖）。指定になかった靴はこげ茶のショートブーツ
+    'kosui_chibi': dict(BASE, girl=True, long=True, ahoge=True, bows=True, mouth='open', turtleneck=True, sleeves=True,
+                        pleats=False, tie=False, hairclip=False,
+                        tones=['#f6d0d5', '#EAB5BC', '#D99DA6', '#A87982', '#7a5560'], **{
+        'skin1': '#FFF0E9', 'skin2': '#FFE0D5', 'skinS': '#E9B5AE', 'handO': '#c48a80', 'skinLine': '#8a5048',
+        'hair1': '#D99DA6', 'hair2': '#A87982', 'hairL': '#EAB5BC', 'hairLine': '#5e3e46',
+        'lash': '#35475C', 'iris1': '#35609a', 'iris2': '#477DB5', 'iris3': '#8FB9E2',
+        'top1': '#FFF9F3', 'top2': '#e8ddd2', 'topLine': '#8a7c70', 'inner': '#FFF9F3', 'ribbon1': '#34343C', 'ribbon2': '#1e1e24',
+        'low1': '#FFF9F3', 'low2': '#e8ddd2', 'leg': '#FFE0D5', 'shoe1': '#6a4a3a', 'shoe2': '#3a2418',
+    }),
     'sota_chibi': dict(BASE, girl=False, eye='tsuri', **{
         'hair1': '#a87a4a', 'hair2': '#5a3a1e', 'hairL': '#d0a470', 'hairLine': '#2e1c0c',
         'iris1': '#1d3f7a', 'iris2': '#3a6ec0', 'iris3': '#a8c8f0',
@@ -135,7 +146,7 @@ def body(a, c, side, step, back):
         sw = {0: -1, 1: 0, 2: 1}[step]
         if girl:
             span_part(a, SKIRT_SIDE_GIRL, c['low1'], c['low2'], c['line'], bottom_line=True)
-            for x, y0 in ((-5, 42), (-2, 42), (1, 43)):  # 折り目
+            for x, y0 in ((-5, 42), (-2, 42), (1, 43)) if c.get('pleats', True) else ():  # 折り目
                 a.dots(x, y0, ['p'] * (45 - y0), {'p': c['low2']})
             span_part(a, TORSO_SIDE_GIRL, c['top1'], c['top2'], c['topLine'])
         else:
@@ -147,14 +158,16 @@ def body(a, c, side, step, back):
         ax = 0 if c['girl'] else -1  # 男子の腕は手本どおり後ろの端が +3
         a.part([('p', [(-0.4 + ax, 36.4), (3 + ax, 36.4), (3.4 + ax + sw, 38.6), (ax + sw, 38.6)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
         a.dots(sw, 38, ['.oKo.', 'oLMKo', 'oMMKo', 'oKdKE', '.EEE.'], {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']})
-        if girl:
+        if girl and c.get('tie', True):
             a.part([('p', [(-5, 36.4), (-3, 36.4), (-4, 38.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+        if c.get('sleeves'):  # 長い袖：手の上の2段を袖口で覆う
+            a.dots(sw, 38, ['cCcCc', '.cCc.'], {'c': c['top2'], 'C': c['top1']})
         feet(a, c, 'side', step)
         return
     # 正面。あごの下（35行）から なで肩で始まり、下へ広がる
     if girl:
         a.part([('p', [(-5.6, 38.4), (5.6, 38.4), (7.8, 43.6), (-7.8, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-        for x, y0 in ((-2, 41), (2, 41), (-5, 42), (5, 42)):  # スカートの折り目：下半分に、地より濃い縦の線
+        for x, y0 in ((-2, 41), (2, 41), (-5, 42), (5, 42)) if c.get('pleats', True) else ():  # スカートの折り目：下半分に、地より濃い縦の線
             a.dots(x, y0, ['p'] * (44 - y0), {'p': c['low2']})
     else:  # ズボンは3段（41〜44行）、股の線
         a.part([('r', -5.6, 40.6, 5.6, 44.6)], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
@@ -165,15 +178,20 @@ def body(a, c, side, step, back):
     for s in (-1, 1):
         a.stroke([(s * 6.4, 35), (s * 2.6, 35)], (255, 253, 244))  # 肩の上の面（あごのすぐ下に見える）
     if not back:
-        if girl:
+        if girl and c.get('tie', True):
             a.clip(m, [('p', [(-1.4, 35), (1.4, 35), (1.4, 39.6), (-1.4, 39.6)])], c['inner'], 1.0)
             a.part([('p', [(-2.4, 35), (0, 36.4), (2.4, 35), (1.8, 37.8), (0, 37), (-1.8, 37.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+        elif girl:
+            pass
         else:
             a.clip(m, [('p', [(-1.8, 35), (1.8, 35), (0, 37.4)])], c['inner'], 1.0)
             a.clip(m, [('r', -0.2, 37.4, 0.2, 40.4)], c['topLine'], 0.7)
     if not girl:
         a.dots(-5, 41, ['bbbbbbbbbbb'], {'b': c['ribbon1']})  # ベルト（1段）
     hands(a, c)
+    if c.get('sleeves'):  # 長い袖：手の上の2段を袖口で覆う（うね編みの縞）
+        for x0, row in ((-12, ['.cCcCc', '..cCc.']), (7, ['cCcCc.', '.cCc..'])):
+            a.dots(x0, 38, row, {'c': c['top2'], 'C': c['top1']})
     feet(a, c, 'front', step)
 
 
@@ -452,6 +470,60 @@ def rgb_t(c):
     return tuple(c[:3]) + (255,)
 
 
+MOUTH_OPEN = {'down': (-1, 32, ['MMM', '.T.']), 'left': (-12, 32, ['MM', 'T.'])}   # 笑った口（開いた口と舌）
+
+
+def extras(a, c, side):
+    """キャラごとに選べる頭の飾り：ahoge（頭の上のとがった毛束）、bows（頭の左右の大きなリボンと垂れた帯）、mouth（口）"""
+    hl = {'line': c['hairLine']}
+    if c.get('ahoge'):
+        if side == 'down':
+            a.part([('p', [(-3.4, 8), (-6.4, 1.6), (-0.4, 6.6)]), ('p', [(0.6, 7), (4.6, 2.2), (3.8, 8)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
+        else:
+            a.part([('p', [(-3.6, 8), (-7.6, 2.4), (-0.6, 7)]), ('p', [(0.4, 7.4), (2.6, 1.8), (3.6, 8)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
+    if c.get('bows'):
+        for s in ((-1, 1) if side == 'down' else (1,)):
+            cx, cy = (s * 14, 13) if side == 'down' else (11, 13)
+            a.part([('p', [(cx + 0.4 * s, cy + 1), (cx + s * 2.4, cy + 8.6), (cx + s * 4.2, cy + 8), (cx + s * 1.6, cy + 1)])], c['ribbon1'], c['ribbon2'], line=c['line'], lw=0.6)   # 垂れた帯
+            a.part([('p', [(cx, cy), (cx - 4.4, cy - 3.2), (cx - 4.4, cy + 3)]), ('p', [(cx, cy), (cx + 4.4, cy - 3.2), (cx + 4.4, cy + 3)])],
+                   c['ribbon1'], c['ribbon2'], line=c['line'], lw=0.6)   # 左右の輪
+            a.part([('e', cx - 1.4, cy - 1.4, cx + 1.4, cy + 1.4)], c['ribbon2'], c['ribbon2'], line=c['line'], lw=0.5)   # 結び目
+    if c.get('mouth') == 'open' and side in MOUTH_OPEN and isinstance(a, Pixel):
+        x0, y0, rows = MOUTH_OPEN[side]
+        a.dots(x0, y0, rows, {'M': c.get('mouthDark', (122, 44, 52)), 'T': c.get('mouthTongue', (232, 120, 128))})
+
+
+def long_shade(im, c, side):
+    """長い後ろ髪の塗り：縦の束（3列ごとに境目の暗い線）、上の方の束に光、下へ行くほど暗い。輪郭はそのまま"""
+    T = [rgb(h) for h in c['tones']] if c['girl'] else boy_tones(c)
+    src = {tuple(c[k][:3]) for k in ('hair1', 'hair2', 'hairL')}
+    px = im.load()
+    for Y in range(FH):
+        for X in range(FW):
+            p = px[X, Y]
+            if p[3] < 128 or tuple(p[:3]) not in src:
+                continue
+            x = X - CX
+            t = 3 if x % 3 == 0 else (1 if x % 3 == 1 and Y < 30 else 2)
+            if Y > 38:
+                t = min(4, t + 1)
+            if side == 'down' and x > 0:
+                t = min(4, t + 1)
+            px[X, Y] = T[t] + (255,)
+
+
+def long_hair_back(c, side):
+    """太ももまでの長い後ろ髪（体より先に描く層）"""
+    a = Art()
+    if side == 'down':
+        a.part([('p', [(-15.6, 16), (15.6, 16), (16.6, 38), (14.4, 43.6), (11, 42.4), (8, 44), (-8, 44), (-11, 42.4), (-14.4, 43.6), (-16.6, 38)])],
+               c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
+    else:  # 横向き：背中側に流れる
+        a.part([('p', [(1, 14), (15.6, 14), (16.4, 34), (15.6, 41), (12.4, 44), (9.6, 41.6), (6, 43.6), (3.4, 36), (3, 30)])],
+               c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
+    return a
+
+
 def head(a, c, side):
     girl = c['girl']
     if side == 'up':
@@ -497,8 +569,9 @@ def head(a, c, side):
         if girl:
             if c.get('cheek', True):
                 a.blob(-11.6, 29.8, -8.4, 31.4, c['blush'], 0.45, 0.6)
-        if girl:
+        if girl and c.get('hairclip', True):
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+        extras(a, c, 'left')
         if not girl:
             a.part([('p', [(-2, 7.4), (0, 3.6), (2.4, 7.2)]), ('p', [(9, 9), (14.6, 8.6), (12.4, 13)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
         return
@@ -524,9 +597,10 @@ def head(a, c, side):
         if c.get('cheek', True):
             a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
             a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
-    a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口は省く
-    if girl:
+    a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口はふつう省く（mouth の設定があるときだけ描く）
+    if girl and c.get('hairclip', True):
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+    extras(a, c, 'down')
 
 
 HAIR_TONES = ['#a3aee6', '#6873b0', '#454d84', '#30365e', '#1e2240']  # 女子の髪：光・明・中・暗・影
@@ -744,12 +818,30 @@ def back_frame(c, step):
                 if im.getpixel((X, Y))[3] > 128:
                     im.putpixel((X, Y), tuple(hair[4][:3]) + (255,))
                     break
-        # リボン（正面では右上。後ろからは左上に見える）
-        rb = {'r': tuple(c['ribbon1'][:3]), 'R': tuple(c['ribbon2'][:3])}
-        for j, row in enumerate(['.r.r', 'rRRr', '.r.r']):
-            for i, ch in enumerate(row):
-                if ch != '.':
-                    im.putpixel((CX - 10 + i, 8 + o + j), rb[ch] + (255,))
+        rb = {'r': tuple(c['ribbon1'][:3]), 'R': tuple(c['ribbon2'][:3]), 'k': tuple(c['line'][:3]),
+              'E': tuple(hair[4][:3]), 'D': tuple(hair[3][:3]), 'M': tuple(hair[2][:3]), 'L': tuple(hair[1][:3])}
+
+        def put(x0, y0, rows):
+            for j, row in enumerate(rows):
+                for i, ch in enumerate(row):
+                    if ch != '.':
+                        im.putpixel((CX + x0 + i, y0 + j), rb[ch] + (255,))
+        if c.get('long'):  # 太ももまでの長い後ろ髪：背中を覆う縦の束（手は見えるように肩より下は細く）
+            for Y in range(28 + o, 45):
+                hw = 15 if Y < 33 + o else 13 if Y < 37 + o else 10
+                for x in range(-hw, hw + 1):
+                    if Y >= 43 and (x + Y) % 2:
+                        continue  # 毛先はギザギザ
+                    edge = abs(x) == hw or Y == 44
+                    ch = 'E' if edge else 'D' if x % 3 == 0 else ('L' if x < -5 and Y < 34 + o else 'M')
+                    put(x, Y, [ch])
+        if c.get('ahoge'):
+            put(-4, o + 2, ['..E...E..', '.EM..EM..', '.EME.EME.', '..EMEME..'])
+        if c.get('bows'):
+            for x0 in (-16, 10):
+                put(x0, 10 + o, ['rr...rr', 'rRrkrRr', 'rRrkrRr', 'rr.k.rr', '...kk..', '...k.k.'])
+        if c.get('hairclip', True):  # リボン（正面では右上。後ろからは左上に見える）
+            put(-10, 8 + o, ['.r.r', 'rRRr', '.r.r'])
     return im
 
 
@@ -762,6 +854,11 @@ def frame(ch, d, step):
         return back_frame(c, step)
     side = 'left' if d in ('left', 'right') else d
     a = Art()
+    bob = 0 if step == 1 else 1
+    if c.get('long') and Art is Pixel:
+        lh = long_hair_back(c, side)
+        long_shade(lh.im, c, side)
+        a.im.alpha_composite(lh.im, (0, bob))
     body(a, c, side, step, side == 'up')
     up = Art()
     head(up, c, side)
@@ -773,6 +870,11 @@ def frame(ch, d, step):
     im = a.im
     bob = 0 if step == 1 else (1 if Art is Pixel else round(0.6 * SS))
     im.alpha_composite(up.im, (0, bob))
+    if c.get('turtleneck') and Art is Pixel:  # タートルネック：あごのすぐ下に、うね編みの縞の高い襟
+        x0, rows = (-5, ['VVVVVVVVVVV', 'VcCcCcCcCcV', 'VcCcCcCcCcV']) if side == 'down' else (-7, ['VVVVVVVVV', 'VcCcCcCcV', 'VcCcCcCcV'])
+        for j, row in enumerate(rows):
+            for i, ch in enumerate(row):
+                im.putpixel((CX + x0 + i, 34 + bob + j), tuple({'V': c['topLine'], 'c': c['top2'], 'C': c['top1']}[ch][:3]) + (255,))
     a.im = im
     out = a.shrink()
     return out.transpose(Image.FLIP_LEFT_RIGHT) if d == 'right' else out
