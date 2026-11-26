@@ -132,7 +132,7 @@ def body(a, c, side, step, back):
             a.part([('p', [(-5, 37.4), (5, 37.4), (6.4, 42), (-6.4, 42)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         else:
             a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 44.4), (-4.4, 44.4)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-        a.part([('p', [(-3.8, 32.6), (4, 32.6), (5, 39.4), (-4.8, 39.4)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
+        a.part([('p', [(-4.6, 32.4), (4.8, 32.4), (5, 39.4), (-4.8, 39.4)]), ('e', -5.4, 31, 5.4, 35)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
         a.part([('p', [(-1.8, 33.2), (2, 33.2), (2 + sw, 38.4), (-1.8 + sw, 38.4)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
         a.part([('e', -1.9 + sw, 37.6, 1.9 + sw, 41)], c['skin1'], c['skin2'], line=c['skinLine'], lw=0.5)
         if girl:
@@ -149,9 +149,13 @@ def body(a, c, side, step, back):
         for x0, x1, l in ((-5.4, -0.4, la), (0.4, 5.4, ra)):
             a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 44 - l), (x0, 44 - l)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     for s in (-1, 1):  # 腕：肩から外へ開く
-        a.part([('p', [(s * 4.6, 33), (s * 6.8, 33.4), (s * 10.4, 38.4), (s * 8.2, 39.2)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
+        a.part([('p', [(s * 7, 35), (s * 9.2, 35), (s * 10.8, 38.6), (s * 8.6, 39.4)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
         a.part([('e', s * 9.8 - 1.9, 37.4, s * 9.8 + 1.9, 41)], c['skin1'], c['skin2'], line=c['skinLine'], lw=0.5)
-    m = a.part([('p', [(-4.8, 32.4), (4.8, 32.4), (7, 39.6), (-7, 39.6)])], c['top1'], c['top2'], shade=c['top2'], light=(255, 252, 240), line=c['topLine'], lw=0.7)
+    # 胴（上から見下ろすので、肩の上の面が見える）
+    m = a.part([('p', [(-7, 35), (7, 35), (7.2, 39.6), (-7.2, 39.6)]), ('e', -9.4, 32.8, -2.6, 37.4), ('e', 2.6, 32.8, 9.4, 37.4)],
+               c['top1'], c['top2'], shade=c['top2'], light=(255, 252, 240), line=c['topLine'], lw=0.7)
+    for s in (-1, 1):
+        a.stroke([(s * 8.2, 34.2), (s * 4, 33.6)], (255, 253, 244))  # 肩の上の面（あごの下に見える）
     if not back:
         if girl:
             a.clip(m, [('p', [(-1.4, 32.4), (1.4, 32.4), (1.4, 39.6), (-1.4, 39.6)])], c['inner'], 1.0)
@@ -246,7 +250,7 @@ def head(a, c, side):
         eye(a, c, -10.4, side=True)
         if girl:
             a.blob(-13.4, 29.8, -10, 31.4, c['blush'], 0.45, 0.6)
-        a.stroke([(-13.6, 31.8), (-12.6, 32)], c['mouth'], 0.5)
+        a.dots(-14, 30, ['n'], {'n': c['skinS']})  # 鼻（点）
         if girl:
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         if not girl:
@@ -271,7 +275,7 @@ def head(a, c, side):
     if girl:
         a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
         a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
-    a.stroke([(-0.9, 31.6), (0, 31.9), (0.9, 31.6)], c['mouth'], 0.5)
+    a.dots(0, 30, ['n'], {'n': c['skinS']})  # 鼻（点）。口は省く
     if girl:
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
 
