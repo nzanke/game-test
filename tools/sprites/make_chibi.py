@@ -90,20 +90,20 @@ class Pixel(Chibi):
 
 BASE = {
     'skin1': '#fbdcc8', 'skin2': '#f6bf9c', 'skinS': '#e2916f', 'skinLine': '#5a2c20', 'blush': '#ff8f96',
-    'eyeW': '#ffffff', 'lash': '#1a0f1c', 'mouth': '#c85a5e', 'line': '#2a1e2a',
+    'eyeW': '#ffffff', 'handO': '#97502c', 'lash': '#1a0f1c', 'mouth': '#c85a5e', 'line': '#2a1e2a',
 }
 CHARS = {
     'yui_chibi': dict(BASE, girl=True, **{
         'hair1': '#343a62', 'hair2': '#16172a', 'hairL': '#55609a', 'hairLine': '#0e0f1c',
         'iris1': '#5a3aa0', 'iris2': '#8a5ad8', 'iris3': '#d8c2ff',
-        'top1': '#f7ecd4', 'top2': '#cdb88f', 'topLine': '#8c7754', 'inner': '#ffffff', 'ribbon1': '#ee4a5e', 'ribbon2': '#9a1f34',
+        'top1': '#f7ecd4', 'top2': '#cdb88f', 'topLine': '#4a3826', 'inner': '#ffffff', 'ribbon1': '#ee4a5e', 'ribbon2': '#9a1f34',
         'low1': '#8e93a6', 'low2': '#4f5366', 'leg': '#2a2730', 'shoe1': '#7a5a4c', 'shoe2': '#2e201c',
     }),
     'haru_chibi': dict(BASE, girl=False, **{
         'hair1': '#3c3f4c', 'hair2': '#16171d', 'hairL': '#626778', 'hairLine': '#0d0d12',
         'iris1': '#5a3a28', 'iris2': '#8a6040', 'iris3': '#c09a78',
-        'top1': '#ffffff', 'top2': '#d6dbe6', 'topLine': '#7d8496', 'inner': '#f1c9b1', 'ribbon1': '#2a2420', 'ribbon2': '#2a2420',
-        'low1': '#3d4360', 'low2': '#1b1e2c', 'leg': '#1b1e2c', 'shoe1': '#4a4446', 'shoe2': '#101012',
+        'top1': '#ffffff', 'top2': '#d6dbe6', 'topLine': '#363a4a', 'inner': '#f1c9b1', 'ribbon1': '#2a2420', 'ribbon2': '#2a2420',
+        'low1': '#4d6290', 'low2': '#2e3c62', 'leg': '#2e3c62', 'shoe1': '#7a6a66', 'shoe2': '#463c40',
     }),
 }
 
@@ -123,37 +123,46 @@ def body(a, c, side, step, back):
             a.part([('p', [(-5.8, 37.4), (5.8, 37.4), (7.6, 43.6), (-7.6, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         else:
             a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 43.6), (-4.4, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-        a.part([('p', [(-3.8, 34), (4, 34), (4.4, 39.4), (-4.2, 39.4)]), ('e', -6.4, 31.4, 6.4, 37)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
-        a.part([('p', [(-1.8, 33.2), (2, 33.2), (2 + sw, 38.4), (-1.8 + sw, 38.4)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
-        a.part([('e', -2.3 + sw, 37.2, 2.3 + sw, 41.4)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.5)
+        a.part([('p', [(-3.8, 35.4), (4, 35.4), (4.4, 40.4), (-4.2, 40.4)]), ('e', -6.4, 33, 6.4, 38.2)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
+        a.part([('p', [(-1.8, 34.4), (2, 34.4), (2 + sw, 38.6), (-1.8 + sw, 38.6)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
+        a.dots(round(sw) - 2, 38, ['.oKE', 'oMMK', 'oLdK', '.EE.'], {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']})
         if girl:
-            a.part([('p', [(-5.4, 32.6), (-3, 32.6), (-4, 35.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+            a.part([('p', [(-5.4, 34), (-3, 34), (-4, 36.6)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         feet(a, c, 'side', step)
         return
-    # 脚と靴（靴は甲が見える）
+    # 正面。あごの下（35行）から なで肩で始まり、下へ広がる
     if girl:
-        a.part([('p', [(-5.6, 37.4), (5.6, 37.4), (7.8, 43.6), (-7.8, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-    else:
-        for x0, x1, l in ((-4.6, -0.4, la), (0.4, 4.6, ra)):
-            a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 43.6), (x0, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
-    for s in (-1, 1):  # 腕：大きな肩から外へ開く
-        a.part([('p', [(s * 7.2, 35.4), (s * 9.8, 35.4), (s * 10.8, 38.4), (s * 8.4, 39.2)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
-    # 胴は細く、肩は大きく（上から見下ろすので、肩の丸みと上の面が見える）
-    m = a.part([('p', [(-5.2, 35), (5.2, 35), (5.8, 39.6), (-5.8, 39.6)]), ('e', -10.2, 32.6, -2.4, 38.2), ('e', 2.4, 32.6, 10.2, 38.2)],
+        a.part([('p', [(-5.6, 38.4), (5.6, 38.4), (7.8, 43.6), (-7.8, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+    else:  # ズボンは3段（41〜44行）、股の線
+        a.part([('r', -5.6, 40.6, 5.6, 44.6)], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        a.dots(0, 43, ['o', 'o'], {'o': c['line']})
+    bottom = 39.4 if girl else 40.4
+    m = a.part([('p', [(-7.6, 34.6), (7.6, 34.6), (10.6, 37.6), (10.6, 38.4), (5.6, bottom), (-5.6, bottom), (-10.6, 38.4), (-10.6, 37.6)])],
                c['top1'], c['top2'], shade=c['top2'], light=(255, 252, 240), line=c['topLine'], lw=0.7)
     for s in (-1, 1):
-        a.stroke([(s * 9, 34.2), (s * 4, 33.4)], (255, 253, 244))  # 肩の上の面（あごの下に見える）
-        a.part([('e', s * 9.8 - 2.4, 36.8, s * 9.8 + 2.4, 41.4)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.5)  # 大きめの手
+        a.stroke([(s * 6.4, 35), (s * 2.6, 35)], (255, 253, 244))  # 肩の上の面（あごのすぐ下に見える）
     if not back:
         if girl:
-            a.clip(m, [('p', [(-1.4, 32.4), (1.4, 32.4), (1.4, 39.6), (-1.4, 39.6)])], c['inner'], 1.0)
-            a.part([('p', [(-2.4, 32.4), (0, 34), (2.4, 32.4), (1.8, 35.6), (0, 34.8), (-1.8, 35.6)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+            a.clip(m, [('p', [(-1.4, 35), (1.4, 35), (1.4, 39.6), (-1.4, 39.6)])], c['inner'], 1.0)
+            a.part([('p', [(-2.4, 35), (0, 36.4), (2.4, 35), (1.8, 37.8), (0, 37), (-1.8, 37.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         else:
-            a.clip(m, [('p', [(-1.8, 32.4), (1.8, 32.4), (0, 35)])], c['inner'], 1.0)
-            a.clip(m, [('r', -0.2, 35, 0.2, 38.4)], c['topLine'], 0.7)
+            a.clip(m, [('p', [(-1.8, 35), (1.8, 35), (0, 37.4)])], c['inner'], 1.0)
+            a.clip(m, [('r', -0.2, 37.4, 0.2, 40.4)], c['topLine'], 0.7)
     if not girl:
-        a.part([('r', -5.6, 38.2, 5.6, 39.6)], c['ribbon1'], c['ribbon2'], lw=0.4)  # ベルト
+        a.dots(-5, 41, ['bbbbbbbbbbb'], {'b': c['ribbon1']})  # ベルト（1段）
+    hands(a, c)
     feet(a, c, 'front', step)
+
+
+# 手：丸ではなくミトン形。外側の輪郭は茶色、内側と下は濃い線（腕と胴の境目にもなる）。
+# 明るい肌は真ん中上寄りに2×2、下の段の内側は欠けていて、その上に親指の付け根の点
+HAND = ['.oKLEE', 'oKMMKE', 'oLMMKE', 'oLLdKE', 'oKKEEE', '.EEE..']
+
+
+def hands(a, c):
+    pal = {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']}
+    a.dots(-11, 38, HAND, pal)
+    a.dots(6, 38, [r[::-1] for r in HAND], pal)
 
 
 def feet(a, c, side, step):
@@ -269,7 +278,7 @@ def head(a, c, side):
         return
     # 正面
     if girl:
-        a.part([('p', [(-15.8, 16), (-11.4, 16), (-11.2, 36), (-15.2, 38)]), ('p', [(15.8, 16), (11.4, 16), (11.2, 36), (15.2, 38)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
+        a.part([('p', [(-15.6, 16), (-11.4, 16), (-11.2, 35.6), (-13.6, 36.4)]), ('p', [(15.6, 16), (11.4, 16), (11.2, 35.6), (13.6, 36.4)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
     hm = a.part([('e', -15.2, 7 if girl else 6.4, 15.2, 33)], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
     if not girl:
         a.part([('p', [(-11, 10), (-13, 6.4), (-6, 8)]), ('p', [(-2, 7.4), (0, 3.6), (2.4, 7.2)]), ('p', [(8, 9), (13, 6.6), (12, 12)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
