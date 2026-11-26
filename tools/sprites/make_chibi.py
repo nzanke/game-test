@@ -538,6 +538,46 @@ EAR_SIDE_GIRL = (-4, 23, [
 ])
 
 
+# 横向きの前髪（x −16〜+3、10〜26行）：手本を1ドットずつ測った作り。
+# H 光／L 明／M 中／D 暗（前の縁もこの色）／E 束の境目と毛先の線／1〜4 束の間からのぞく肌／_ 透明／. そのまま（目・耳）
+BANGS_SIDE = (-16, 10, [
+    '____DMMMMMMMMMMMMMMM',
+    '___DMLMMMMMMMMMMMMMM',
+    '__DMLMMMMMMMMMMMMMMM',
+    '__DMHLMMMMMMMMMMMMMM',
+    '_DMLHHMMMMMMMMMMMMMM',
+    '_DMLHHLMMMMMMMMMMMML',
+    'DMMMLLMDMLMMMMMMLLLM',
+    'DMMMLMMDMLLLLMLHHHLM',
+    'DMMMLMDDELHHMDMLHLMD',
+    'DMMMMMDDEMLLMEMLLMMD',
+    'DMMDMMDEEMMMDEDMLMME',
+    'EMMDMDE4EMMDE4EMMMDE',
+    'EDMDDDE3EDDE43EMMMDE',
+    '_EMDDE43EEE333EMMD..',
+    '_EDDDE3.....33EMDD.4',
+    '__EDE32......3EDD..3',
+    '___EE223....43EDD.43',
+])
+
+
+def bangs_side(im, c):
+    x0, y0, rows = BANGS_SIDE
+    if c['girl']:
+        t = [rgb(h) for h in HAIR_TONES]
+    else:
+        t = [rgb('#7d8396'), tuple(c['hairL'][:3]), tuple(c['hair1'][:3]), rgb('#2a2c36'), tuple(c['hair2'][:3])]
+    pal = {'H': t[0], 'L': t[1], 'M': t[2], 'D': t[3], 'E': t[4],
+           '1': c['skin1'], '2': c['skin2'], '3': c['skinS'], '4': c['handO']}
+    px = im.load()
+    for j, row in enumerate(rows):
+        for i, ch in enumerate(row):
+            X, Y = CX + x0 + i, y0 + j
+            if ch == '.':
+                continue
+            px[X, Y] = (0, 0, 0, 0) if ch == '_' else tuple(pal[ch][:3]) + (255,)
+
+
 def ear_side(im, c):
     girl = c['girl']
     x0, y0, rows = EAR_SIDE_GIRL if girl else EAR_SIDE_BOY
@@ -577,6 +617,7 @@ def frame(ch, d, step):
         hair_shade(up.im, c, side)
     if side == 'left' and Art is Pixel:
         ear_side(up.im, c)
+        bangs_side(up.im, c)
     im = a.im
     bob = 0 if step == 1 else (1 if Art is Pixel else round(0.6 * SS))
     im.alpha_composite(up.im, (0, bob))
