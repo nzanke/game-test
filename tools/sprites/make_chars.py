@@ -11,22 +11,78 @@ ROOT = Path(__file__).resolve().parents[2]
 FW = FH = 32
 
 # ---------------- 部品 ----------------
-HEAD = {
+# 頭：男の子（とがった髪、前髪が目にかかる、細めの目）
+HEAD_BOY = {
+    'down': [
+        '..h..hhhhhh..h..',
+        '.hHhhHHLLHHhhHh.',
+        '.hHHHHLLLLHHHHh.',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHhHHHhHHHhHHHh',
+        'hHhSHhSSHhSSHhHh',
+        'hhSSSHSSSSHSSShh',
+        'hSSEESSSSSSEESSh',
+        '.SSIISSSSSSIISS.',
+        '.SSSSSSSSSSSSSS.',
+        '.sSSSSSSSSSSSSs.',
+        '..sSSSSmmSSSSs..',
+        '...ssSSSSSSss...',
+        '.....ssssss.....',
+    ],
+    'left': [
+        '....h.hhhhh.h...',
+        '...hHhHHLLHhHh..',
+        '..hHHHLLLHHHHHh.',
+        '.hHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHhHHHHHHHHHHHHh',
+        'hhSHhSHHHHHHHHHh',
+        'hSSSSSSHHHHHHHh.',
+        'hSEESSSSHHHHHHHh',
+        'SSIISSSSShHHHh..',
+        'SSSSSSSSSShHh...',
+        '.SSSSSSSSSSh....',
+        '..smSSSSSSs.....',
+        '...ssSSSSs......',
+        '.....ssss.......',
+    ],
+    'up': [
+        '..h..hhhhhh..h..',
+        '.hHhhHHLLHHhhHh.',
+        '.hHHHHLLLLHHHHh.',
+        'hHHHHHLLHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        '.hHHHHHHHHHHHHh.',
+        '.hHhHHhHHhHHhHh.',
+        '..hhsSSSSSShh...',
+        '...ssSSSSSSss...',
+        '.....ssssss.....',
+    ],
+}
+
+# 頭：女の子（丸い輪郭、まつげのある大きな目、色の入った瞳、ほおの赤み）
+HEAD_GIRL = {
     'down': [
         '....hhhhhhhh....',
         '..hhHHHLLHHHhh..',
         '.hHHHLLLLHHHHHh.',
-        '.hHHHHHHHHHHHHh.',
         'hHHHHHHHHHHHHHHh',
-        'hHHhHHHHHHHhHHHh',
-        'hHhSSHhSShHSSHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHHHHHHHHHHHHh',
+        'hHHHSSSHHSSSHHHh',
         'hHSSSSSSSSSSSSHh',
-        'hHSEESSSSSSEESHh',
-        'hSSeISSSSSSeISSh',
-        'hSSIISSSSSSIISSh',
-        '.sSpSSSSSSSSpSs.',
-        '..sSSSSmmSSSSs..',
-        '...ssSSSSSSss...',
+        'hHSEEESSSSEEESHh',
+        'hSSeIISSSSeIISSh',
+        'hSSIJISSSSIJISSh',
+        'hSpSSSSSSSSSSpSh',
+        'hhsSSSSmSSSSSshh',
+        '.h.ssSSSSSSss.h.',
         '.....ssssss.....',
     ],
     'left': [
@@ -36,15 +92,15 @@ HEAD = {
         '.hHHHHHHHHHHHHHh',
         '.hHHHHHHHHHHHHHh',
         'hHHHHHHHHHHHHHHh',
-        'hHhSSHHHHHHHHHHh',
-        'hSSSSSSHHHHHHHh.',
-        'hSEESSSSHHHHHHh.',
-        'SSeISSSSSHHHHHh.',
-        'SSIISSSSSShHHh..',
-        '.SpSSSSSSSShh...',
-        '..smSSSSSSs.....',
-        '...ssSSSSs......',
-        '.....ssss.......',
+        'hHSSSHHHHHHHHHHh',
+        'hSSSSSSHHHHHHHHh',
+        'SEEESSSSHHHHHHHh',
+        'SeIISSSSSHHHHHHh',
+        'SIJISSSSSHHHHHh.',
+        'SpSSSSSSShHHHh..',
+        '.smSSSSSSSh.....',
+        '..ssSSSSSs......',
+        '....ssss........',
     ],
     'up': [
         '....hhhhhhhh....',
@@ -167,26 +223,39 @@ LEGS = {
     },
 }
 
-# 髪を足す（長い髪・ポニーテール）。頭の左上を(0,0)とした座標に H/h を置く
-def hair_long(d):
+# 髪を足す。頭の左上を(0,0)とした座標に文字を置く（頭の外にはみ出してよい）
+def hair_girl(d):
     pts = []
+    tail_w = [2, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1]  # サイドテールの太さ（上から）
     if d == 'down':
-        for y in range(9, 19):
+        for y in range(9, 17):  # 肩までの髪
             pts += [(0, y, 'h'), (1, y, 'H'), (14, y, 'H'), (15, y, 'h')]
+        for i, w in enumerate(tail_w):  # 向かって右にサイドテール
+            for k in range(w):
+                pts.append((16 + k, 3 + i, 'h' if k == w - 1 or i == len(tail_w) - 1 else 'H'))
+        pts += [(14, 1, 'R'), (15, 1, 'r'), (16, 1, 'R'), (14, 2, 'R'), (16, 2, 'R'), (15, 0, 'R')]
     elif d == 'up':
-        for y in range(12, 19):
+        for y in range(12, 17):
             for x in range(1, 15):
-                pts.append((x, y, 'h' if x in (1, 14) or y == 18 else 'H'))
+                pts.append((x, y, 'h' if x in (1, 14) or y == 16 else 'H'))
+        for i, w in enumerate(tail_w):  # 後ろから見ると左側
+            for k in range(w):
+                pts.append((-1 - k, 3 + i, 'h' if k == w - 1 or i == len(tail_w) - 1 else 'H'))
+        pts += [(1, 1, 'R'), (0, 1, 'r'), (-1, 1, 'R'), (1, 2, 'R'), (-1, 2, 'R'), (0, 0, 'R')]
     elif d == 'left':
-        for y in range(7, 18):
-            for x in range(11, 15):
-                pts.append((x, y, 'h' if x in (11, 14) or y == 17 else 'H'))
+        for y in range(7, 16):
+            for x in range(10, 15):
+                pts.append((x, y, 'h' if x in (10, 14) or y == 15 else 'H'))
+        for i, w in enumerate(tail_w):  # 頭の後ろにサイドテール
+            for k in range(w):
+                pts.append((15 + k, 3 + i, 'h' if k == w - 1 or i == len(tail_w) - 1 else 'H'))
+        pts += [(13, 0, 'R'), (14, 1, 'r'), (13, 1, 'R'), (15, 1, 'R'), (14, 0, 'R')]
     return pts
 
 
 CHARS = {
     'haru': {
-        'body': 'shirt', 'legs': 'pants', 'hair': None,
+        'head': HEAD_BOY, 'body': 'shirt', 'legs': 'pants', 'hair': None,
         'pal': {
             'H': '#3a3c44', 'h': '#212329', 'L': '#646874',
             'S': '#f7dcc4', 's': '#e2b597', 'p': '#f2b8a8', 'm': '#c9826e',
@@ -196,11 +265,11 @@ CHARS = {
         },
     },
     'yui': {
-        'body': 'sailor', 'legs': 'skirt', 'hair': hair_long,
+        'head': HEAD_GIRL, 'body': 'sailor', 'legs': 'skirt', 'hair': hair_girl,
         'pal': {
             'H': '#94593a', 'h': '#663922', 'L': '#c08560',
             'S': '#f8ddc6', 's': '#e4b89b', 'p': '#f4b2a6', 'm': '#c9806c',
-            'E': '#2e1d1a', 'I': '#7a4430', 'e': '#ffffff',
+            'E': '#2e1d1a', 'I': '#8a4a2c', 'J': '#d08a50', 'e': '#ffffff', 'r': '#8e1f28',
             'W': '#f7f7f3', 'w': '#d3d5da', 'N': '#2f3e68', 'R': '#c8343f',
             'K': '#2f3e68', 'k': '#222d4f', 'B': '#4a3226',
         },
@@ -219,7 +288,7 @@ def frame(ch, d, step):
     g = [['.'] * FW for _ in range(FH)]
     side = 'left' if d in ('left', 'right') else d
     legs_d = 'left' if side == 'left' else 'down'
-    head = HEAD[side]
+    head = ch['head'][side]
     body = BODY[ch['body']][side]
     legs = LEGS[ch['legs']][legs_d][step]
     ox, oy = 8, 2
@@ -237,7 +306,7 @@ def frame(ch, d, step):
             yy = oy + bob + y
             if not 0 <= yy < FH:
                 continue
-            if side != 'up' and y < 15 and g[yy][ox + x] in 'SsEIepm':  # 顔の上には描かない
+            if side != 'up' and y < 15 and g[yy][ox + x] in 'SsEIJepm':  # 顔の上には描かない
                 continue
             g[yy][ox + x] = c
     if d == 'right':
@@ -272,8 +341,9 @@ def render(ch):
 
 
 def check():
-    for name, rows in HEAD.items():
-        assert all(len(r) == 16 for r in rows) and len(rows) == 15, ('HEAD', name)
+    for hd in (HEAD_BOY, HEAD_GIRL):
+        for name, rows in hd.items():
+            assert all(len(r) == 16 for r in rows) and len(rows) == 15, ('HEAD', name, [len(r) for r in rows])
     for b, ds in BODY.items():
         for d, rows in ds.items():
             assert all(len(r) == 16 for r in rows) and len(rows) == 9, ('BODY', b, d)
