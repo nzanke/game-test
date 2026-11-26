@@ -89,7 +89,7 @@ class Pixel(Chibi):
 
 
 BASE = {
-    'skin1': '#fff0e4', 'skin2': '#f4cdb6', 'skinS': '#d99b86', 'skinLine': '#a8685a', 'blush': '#ff8f96',
+    'skin1': '#fbdcc8', 'skin2': '#f6bf9c', 'skinS': '#e2916f', 'skinLine': '#5a2c20', 'blush': '#ff8f96',
     'eyeW': '#ffffff', 'lash': '#1a0f1c', 'mouth': '#c85a5e', 'line': '#2a1e2a',
 }
 CHARS = {
@@ -175,8 +175,9 @@ def feet(a, c, side, step):
 
 
 # ---------------- 頭（大きく、前髪は目のすぐ上まで、目は大きく下寄り） ----------------
-EYE_GIRL = ['EEEEE', 'wiiiE', 'wiIIE', '.IIKE', '..KK.']   # まつげ・外側の白目・大きな黒目（上が濃い→下が明るい）。白い光は使わない
-EYE_BOY = ['EEEEE', 'wiiiE', 'wiIIE', '.IIK.']
+# 左の目（外側が左）。E まつげ／g 影の白目／w 白目／i 濃い黒目／I 黒目／K 明るい黒目／P 瞳孔
+EYE_GIRL = ['EEEE.', 'giEEE', 'wiPig', 'wIPIw', 'wKKKw']   # 女子は外側にまつげを1ドット足す
+EYE_BOY = ['.EEE.', 'giEEE', 'wiPig', 'wIPIw', 'wKKKw']
 
 
 def eye(a, c, cx, flip=False, side=False):
@@ -187,9 +188,9 @@ def eye(a, c, cx, flip=False, side=False):
         if flip:
             rows = [r[::-1] for r in rows]
         w = len(rows[0])
-        pal = {'E': c['lash'], 'w': (255, 255, 255), 'i': c['iris1'], 'I': c['iris2'], 'K': c['iris3']}
+        pal = {'E': c['lash'], 'P': c['lash'], 'w': (255, 255, 255), 'g': (214, 208, 216), 'i': c['iris1'], 'I': c['iris2'], 'K': c['iris3']}
         # 左の目は白目が外側（左）、右の目は反転して外側（右）
-        a.dots(round(cx - w / 2), 25, rows, pal)
+        a.dots(round(cx) - w // 2, 25, rows, pal)
         return
     s = -1 if flip else 1
     w, h = (3.6, 4.6) if not side else (2.6, 4.4)
@@ -217,6 +218,9 @@ def bangs(a, c, x0, x1, tips, top=12, base=21.6, face=None):
         m = a.part(shapes, c['hair1'], c['hair2'])
         ring = ImageChops.subtract(m.filter(ImageFilter.MaxFilter(3)), m)
         a.tint(ImageChops.multiply(ring, face), c['hairLine'], 1.0)
+        below = lambda n: ImageChops.multiply(ImageChops.subtract(ImageChops.offset(m, 0, n), m.filter(ImageFilter.MaxFilter(3)) if n > 1 else m), face)
+        a.tint(below(3), c['skin2'], 1.0)
+        a.tint(below(2), c['skinS'], 1.0)
         for k, (tx0, tx1, y) in enumerate(tips):  # 1本おきの毛束に短い明るい筋、束の間に暗い線
             mx = (tx0 + tx1) / 2
             if k % 2 == 1:
@@ -270,15 +274,15 @@ def head(a, c, side):
     if not girl:
         a.part([('p', [(-11, 10), (-13, 6.4), (-6, 8)]), ('p', [(-2, 7.4), (0, 3.6), (2.4, 7.2)]), ('p', [(8, 9), (13, 6.6), (12, 12)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
     fm = a.part([('e', -10.4, 15.6, 10.4, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], sh=(1.2, 1.4), sb=1.0, line=c['skinLine'], lw=0.6)
-    a.clip(fm, [('r', -11, 17, 11, 19.4)], c['skinS'], 0.5, blur=0.8)
-    tips = [(-12, -8.6, 22.6), (-8, -5, 20.6), (-4.2, -1, 21.8), (0, 3.2, 20.4), (3.8, 7, 21.6), (7.6, 11.6, 22.8)]  # 毛先は短く、間から額が見える
+    tips = [(-12.4, -8.2, 25), (-8.8, -4.6, 24.6), (-4.6, -1.8, 22.2), (-1.6, 1.6, 20.6), (1.8, 4.6, 22.2), (4.6, 8.8, 24.6), (8.2, 12.4, 25)]  # 毛先は目の上端まで。真ん中だけ短く額が見える
     bm = bangs(a, c, -12.4, 12.4, tips, base=18, face=fm)
-    if girl:
-        for s in (-1, 1):  # 顔の横の髪（女子だけ、細め）
-            a.part([('p', [(s * 15.4, 16), (s * 11.8, 16), (s * 11.4, 30), (s * 12.8, 33), (s * 15, 26)])], c['hair1'] if s < 0 else c['hair2'], c['hair2'], line=c['hairLine'], lw=0.6)
+    for s in (-1, 1):  # 顔の横の髪：目の外側の端から あごの近くまで顔を縁取る
+        pts = [(s * 15.4, 16), (s * 9.6, 18), (s * 9.6, 29), (s * 11.2, 33.4), (s * 15, 28)] if girl else \
+              [(s * 14.8, 16), (s * 9.6, 18), (s * 9.6, 28.6), (s * 10.8, 32.6), (s * 12.4, 30.6), (s * 14.2, 22)]  # 男子は細く短め
+        a.part([('p', pts)], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
     a.clip(hm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.45, blur=0.6) if not isinstance(a, Pixel) else a.stroke([(-10, 10), (-6, 8), (-1, 8)], c['hairL'])
-    eye(a, c, -5, flip=False)
-    eye(a, c, 5, flip=True)
+    eye(a, c, -6, flip=False)   # 左目 x -8..-4、右目 4..8（目の間7ドット）
+    eye(a, c, 6, flip=True)
     if girl:
         a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
         a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
