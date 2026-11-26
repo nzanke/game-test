@@ -10,7 +10,7 @@
 - 校舎（廊下8枚と部屋の型）は `tools/gen_school.py` で生成する。生成した `data/maps/school_*.js` は直接直さず、スクリプトを直して作り直す。お話のイベントは `data/story.js` に `G.addEvents` で足す（`at: '扉の名前'` で位置を決められる）。見取り図の施設名のうち学校が特定されそうな名前は一般的な名前に変える
 - 参考にした市販ゲームのファイル（データ・画像・音・シナリオ）はこのリポジトリに入れない
 - タイル素材（ドット絵世界）は二次配布禁止。元のPNGは入れず、`tools/encode_tileset.py` で変換した `data/tilesets/*.js` だけを入れる。タイトル画面の著作権表示（system.js の credits）は消さない
-- キャラの歩行グラフィック：ユイ（ヒロイン）は `tools/sprites/make_trial.py` で描いた試作（`img/chars/trial.png`）を暫定で使う。好まれた描き方は「イラストをドットに落とし込んだ」方式：6倍の大きさでグラデーション・柔らかい影と光・描き込んだアニメ風の目でイラストとして描き、64×96pxに縮める。約4頭身（デフォルメ控えめ）、やや上から見下ろす角度。主人公のハルは旧方式の `tools/sprites/make_chars.py`（`img/chars/haru.png`）のまま。参考が既存作品のキャラのときは写さない。直したらスクリプトを動かして画像を作り直す
+- キャラの歩行グラフィックは「イラストをドットに落とし込んだ」描き方：6倍の大きさでグラデーション・柔らかい影と光・描き込んだアニメ風の目でイラストとして描き、64×96pxに縮める。約4頭身（デフォルメ控えめ）、やや上から見下ろす角度。ユイは `tools/sprites/make_trial.py`（`img/chars/trial.png`）、ハルは `tools/sprites/make_haru.py`（`img/chars/haru.png`。描画の道具は make_trial.py のものを使う）。新しいキャラも同じ道具で描く。参考が既存作品のキャラのときは写さない。直したらスクリプトを動かして画像を作り直す
 - 字体：ゲームの文字は M+ 1m（`fonts/mplus-1m-regular.ttf`、M+ FONTS は自由に使用・配布できる）。`G.font()` と css/style.css で指定している。収録外の文字（♪など）は端末のフォントになる
 - 公開は gh-pages ブランチから。更新したら、まず `python3 tools/stamp.py`（files.js の版の番号を新しくする。ブラウザが古いファイルを使い回して新旧が混ざるのを防ぐ）、コミットして `git push origin main main:gh-pages` で両方に送る。そのあと `gh api repos/nzanke/game-test/actions/runs` で「pages build and deployment」が新しいコミットで completed success になったのを確かめてから報告する。ビルドが走らないときは空のコミットを送り直す（Pages 設定のAPIは作業環境から使えない）
 - やりとりと説明は日本語で
