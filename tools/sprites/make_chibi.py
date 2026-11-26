@@ -121,17 +121,17 @@ def body(a, c, side, step, back):
         sw = {0: -1.6, 1: 0, 2: 1.6}[step]
         if step == 1:
             if girl:
-                a.part([('r', -2, 41, 1.6, 45)], c['leg'], c['leg'], line=c['line'], lw=0.6)
-            a.part([('e', -4.8, 44.2, 2, 47)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
+                a.part([('r', -2, 43, 1.6, 46.2)], c['leg'], c['leg'], line=c['line'], lw=0.6)
+            a.part([('e', -4.8, 45.6, 2, 47.4)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
         else:
             if girl:
-                a.part([('p', [(0, 41), (2.6, 41), (4.6, 44.6), (2, 45)]), ('p', [(-3, 41), (-0.4, 41), (-2.6, 45), (-5, 44.6)])], c['leg'], c['leg'], line=c['line'], lw=0.6)
-            a.part([('e', 1.6, 43.6, 6.6, 46.2)], c['shoe2'], c['shoe2'], line=c['line'], lw=0.7)
-            a.part([('e', -7.4, 44.2, -1.6, 47)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
+                a.part([('p', [(0, 43), (2.6, 43), (4.6, 45.8), (2, 46)]), ('p', [(-3, 43), (-0.4, 43), (-2.6, 46.2), (-5, 45.8)])], c['leg'], c['leg'], line=c['line'], lw=0.6)
+            a.part([('e', 1.6, 45, 6.6, 46.8)], c['shoe2'], c['shoe2'], line=c['line'], lw=0.7)
+            a.part([('e', -7.4, 45.6, -1.6, 47.4)], c['shoe1'], c['shoe2'], light=(200, 170, 150), line=c['line'], lw=0.7)
         if girl:
-            a.part([('p', [(-5, 37.4), (5, 37.4), (6.4, 42), (-6.4, 42)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(-5, 37.4), (5, 37.4), (6.6, 44.2), (-6.6, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         else:
-            a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 44.4), (-4.4, 44.4)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 45.8), (-4.4, 45.8)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         a.part([('p', [(-3.8, 34), (4, 34), (4.4, 39.4), (-4.2, 39.4)]), ('e', -6.4, 31.4, 6.4, 37)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
         a.part([('p', [(-1.8, 33.2), (2, 33.2), (2 + sw, 38.4), (-1.8 + sw, 38.4)])], c['top1'], c['top2'], line=c['topLine'], lw=0.6)
         a.part([('e', -2.3 + sw, 37.2, 2.3 + sw, 41.4)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.5)
@@ -141,13 +141,13 @@ def body(a, c, side, step, back):
     # 脚と靴（靴は甲が見える）
     for x0, x1, l in ((-5, -1, la), (1, 5, ra)):  # 上から見下ろすので、脚は短く、靴は平たく小さい
         if girl:
-            a.part([('r', x0 + 0.8, 41, x1 - 0.8, 44.4 - l)], c['leg'], c['leg'], line=c['line'], lw=0.6)
-        a.part([('e', x0, 44.2 - l, x1, 47 - l)], c['shoe1'], c['shoe2'], light=(210, 180, 160), line=c['line'], lw=0.7, la=0.6)
+            a.part([('r', x0 + 0.8, 43, x1 - 0.8, 46.2 - l)], c['leg'], c['leg'], line=c['line'], lw=0.6)
+        a.part([('e', x0, 45.6 - l, x1, 47.4 - l)], c['shoe1'], c['shoe2'], light=(210, 180, 160), line=c['line'], lw=0.7, la=0.6)
     if girl:
-        a.part([('p', [(-4.8, 37.4), (4.8, 37.4), (6.4, 42), (-6.4, 42)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        a.part([('p', [(-4.8, 37.4), (4.8, 37.4), (6.8, 44.2), (-6.8, 44.2)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     else:
         for x0, x1, l in ((-4.6, -0.4, la), (0.4, 4.6, ra)):
-            a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 44 - l), (x0, 44 - l)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            a.part([('p', [(x0, 38.6), (x1, 38.6), (x1, 45.8 - l), (x0, 45.8 - l)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
     for s in (-1, 1):  # 腕：大きな肩から外へ開く
         a.part([('p', [(s * 7.2, 35.4), (s * 9.8, 35.4), (s * 10.8, 38.4), (s * 8.4, 39.2)])], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.6)
     # 胴は細く、肩は大きく（上から見下ろすので、肩の丸みと上の面が見える）
