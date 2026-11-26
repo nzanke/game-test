@@ -628,12 +628,22 @@ def head(a, c, side):
         if c.get('cheek', True):
             a.blob(-8.6, 30.8, -4.8, 32.4, c['blush'], 0.45, 0.6)   # 頬の赤みは鼻（31行）と同じ高さに並べる
             a.blob(4.8, 30.8, 8.6, 32.4, c['blush'], 0.45, 0.6)
-    a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口はふつう省く（mouth の設定があるときだけ描く）
+    nose = c.get('nose', NOSE)
+    ns = tuple(round(c['skin2'][i] * 0.5 + c['skinS'][i] * 0.5) for i in range(3))
+    if nose == 'A':
+        a.dots(0, 31, ['n'], {'n': ns})
+    elif nose == 'B':  # 鼻の右側の影（光は左上から）：中心の1ドット右に縦2ドット
+        a.dots(1, 30, ['n', 'n'], {'n': ns})
+    elif nose == 'C':
+        a.dots(0, 30, ['n'], {'n': c['skinS']})
+    else:
+        a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口はふつう省く（mouth の設定があるときだけ描く）
     if girl and c.get('hairclip', True):
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
     extras(a, c, 'down')
 
 
+NOSE = 'B'   # 鼻の描き方（dot＝真ん中の点／A＝薄い点／B＝中心の1ドット右に縦2ドットの薄い影（いま使う）／C＝1段上の点）
 HAIR_TONES = ['#a3aee6', '#6873b0', '#454d84', '#30365e', '#1e2240']  # 女子の髪：光・明・中・暗・影
 
 
