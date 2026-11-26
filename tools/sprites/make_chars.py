@@ -1,4 +1,5 @@
-"""キャラクターの歩行グラフィックを一から描いて img/chars/*.png に書き出す（1コマ64×96px、等倍表示、約3頭身）。
+"""キャラクターの歩行グラフィックを一から描いて img/chars/*.png に書き出す（1コマ64×96px、等倍表示）。
+比率は参考のドットを測って合わせた：頭の高さは全身の約4割・頭の幅は肩幅くらい、胴は短め、スカートは裾が広がり、脚は短く靴は太い。
 
 使い方：python3 tools/sprites/make_chars.py
 横3コマ（左足・立ち・右足）×縦4段（下・左・右・上）。
@@ -22,6 +23,7 @@ class Pen:
     """パレットの文字で色を指定して描く道具。x は体の中心からのずれで指定する"""
 
     def __init__(self, pal):
+        self.k = 1.0  # 頭を描くときだけ大きくする倍率
         self.pal = {k: hexc(v) for k, v in pal.items()}
         self.im = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
         self.d = ImageDraw.Draw(self.im)
@@ -29,10 +31,12 @@ class Pen:
     def c(self, k):
         return self.pal[k]
 
-    @staticmethod
-    def b(box):
+    def t(self, x, y):
+        return (round(CX + x * self.k), round(y * self.k))
+
+    def b(self, box):
         x0, y0, x1, y1 = box
-        return (CX + x0, y0, CX + x1, y1)
+        return self.t(x0, y0) + self.t(x1, y1)
 
     def ell(self, box, k, shade=None):
         x0, y0, x1, y1 = self.b(box)
@@ -51,117 +55,111 @@ class Pen:
             self.d.rectangle((x0, y0, x1, y1), fill=self.c(k))
 
     def poly(self, pts, k):
-        self.d.polygon([(CX + x, y) for x, y in pts], fill=self.c(k))
+        self.d.polygon([self.t(x, y) for x, y in pts], fill=self.c(k))
 
     def line(self, pts, k):
-        self.d.line([(CX + x, y) for x, y in pts], fill=self.c(k))
+        self.d.line([self.t(x, y) for x, y in pts], fill=self.c(k))
 
     def px(self, pts, k):
         for x, y in pts:
-            self.d.point((CX + x, y), fill=self.c(k))
+            self.d.point(self.t(x, y), fill=self.c(k))
 
 
 LIFT = {0: (3, 0), 1: (0, 0), 2: (0, 3)}  # コマごとに（左足、右足）を上げる量
+HEAD_K = 1.27  # 頭の倍率（参考の比率：頭の高さは全身の約4割、頭の幅は肩幅と同じくらい）
 
 
-# ---------------- 脚 ----------------
+# ---------------- 脚（短め、靴は太く） ----------------
 def legs_front(p, ch, step):
     la, ra = LIFT[step]
     if ch['gender'] == 'boy':
-        p.rect((-8, 58, -2, 86 - la), 'P', 'q')
-        p.rect((2, 58, 8, 86 - ra), 'P', 'q')
-        p.rect((-9, 86 - la, -2, 90 - la), 'B')
-        p.rect((2, 86 - ra, 9, 90 - ra), 'B')
+        p.rect((-9, 56, -1, 84 - la), 'P', 'q')
+        p.rect((1, 56, 9, 84 - ra), 'P', 'q')
+        p.rect((-10, 84 - la, -1, 91 - la), 'B')
+        p.rect((1, 84 - ra, 10, 91 - ra), 'B')
     else:
-        p.rect((-6, 70, -3, 79 - la), 'S', 's')
-        p.rect((3, 70, 6, 79 - ra), 'S', 's')
-        p.rect((-6, 79 - la, -3, 86 - la), 'W', 'w')
-        p.rect((3, 79 - ra, 6, 86 - ra), 'W', 'w')
-        p.rect((-7, 86 - la, -2, 90 - la), 'B')
-        p.rect((2, 86 - ra, 7, 90 - ra), 'B')
+        p.rect((-8, 78, -2, 86 - la), 'W', 'w')
+        p.rect((2, 78, 8, 86 - ra), 'W', 'w')
+        p.rect((-9, 86 - la, -1, 91 - la), 'B')
+        p.rect((1, 86 - ra, 9, 91 - ra), 'B')
 
 
 def legs_side(p, ch, step):
     boy = ch['gender'] == 'boy'
     if step == 1:
         if boy:
-            p.rect((-4, 58, 4, 86), 'P', 'q')
-            p.rect((-7, 86, 4, 90), 'B')
+            p.rect((-5, 56, 5, 84), 'P', 'q')
+            p.rect((-9, 84, 5, 91), 'B')
         else:
-            p.rect((-2, 70, 2, 79), 'S', 's')
-            p.rect((-2, 79, 2, 86), 'W', 'w')
-            p.rect((-5, 86, 2, 90), 'B')
+            p.rect((-4, 78, 4, 86), 'W', 'w')
+            p.rect((-8, 86, 4, 91), 'B')
         return
     back, front = ('q', 'P') if step == 0 else ('P', 'q')
     if boy:
-        p.poly([(-2, 58), (4, 58), (9, 86), (4, 86)], back)
-        p.rect((4, 86, 11, 89), 'B')
-        p.poly([(-4, 58), (2, 58), (-4, 86), (-9, 86)], front)
-        p.rect((-12, 86, -4, 89), 'B')
+        p.poly([(-2, 56), (5, 56), (10, 84), (4, 84)], back)
+        p.rect((4, 84, 13, 90), 'B')
+        p.poly([(-5, 56), (2, 56), (-4, 84), (-10, 84)], front)
+        p.rect((-14, 84, -4, 90), 'B')
     else:
-        p.poly([(1, 70), (4, 70), (8, 86), (5, 86)], 's')
-        p.poly([(5, 80), (7, 80), (8, 86), (5, 86)], 'w')
-        p.rect((5, 86, 10, 89), 'B')
-        p.poly([(-3, 70), (0, 70), (-5, 86), (-8, 86)], 'S')
-        p.poly([(-5, 80), (-2, 80), (-5, 86), (-8, 86)], 'W')
-        p.rect((-11, 86, -5, 89), 'B')
+        p.poly([(1, 78), (6, 78), (9, 86), (4, 86)], 'w')
+        p.rect((4, 86, 11, 90), 'B')
+        p.poly([(-5, 78), (0, 78), (-4, 86), (-9, 86)], 'W')
+        p.rect((-13, 86, -4, 90), 'B')
 
 
-# ---------------- 胴 ----------------
+# ---------------- 胴（短め） ----------------
 def body_front(p, ch, back=False):
     girl = ch['gender'] == 'girl'
-    # 腕（半袖）
-    for s in (-1, 1):
-        x0 = -14 if s < 0 else 10
-        p.rect((x0, 37, x0 + 4, 45), 'W', 'w')
-        p.rect((x0 + 1, 46, x0 + 3, 59), 'S', 's')
-        p.rect((x0 + 1, 59, x0 + 3, 61), 'S')
-    if girl:
-        p.poly([(-10, 56), (10, 56), (14, 72), (-14, 72)], 'K')
-        for x in (-8, -3, 3, 8):
-            p.line([(x, 60), (x + (1 if x > 0 else -1) * 2, 72)], 'k')
-    p.poly([(-11, 36), (11, 36), (9, 58 if not girl else 57), (-9, 58 if not girl else 57)], 'w')
-    p.poly([(-10, 36), (10, 36), (8, 56), (-8, 56)], 'W')
+    for s in (-1, 1):  # 腕（半袖）
+        x0 = -16 if s < 0 else 12
+        p.rect((x0, 44, x0 + 4, 51), 'W', 'w')
+        p.rect((x0 + 1, 52, x0 + 3, 62), 'S', 's')
+        p.rect((x0, 62, x0 + 3, 65), 'S')
+    if girl:  # 裾の広がったスカート
+        p.poly([(-11, 55), (11, 55), (18, 80), (-18, 80)], 'K')
+        for x in (-10, -4, 4, 10):
+            p.line([(x, 59), (x + (2 if x > 0 else -2) + (1 if abs(x) > 5 else 0), 80)], 'k')
+    p.poly([(-13, 44), (13, 44), (11, 58), (-11, 58)], 'w')
+    p.poly([(-12, 44), (12, 44), (10, 56), (-10, 56)], 'W')
     if not girl:
-        p.rect((-9, 56, 9, 59), 'P')
-        p.rect((-1, 56, 1, 58), 'B')  # ベルトの留め具
+        p.rect((-11, 55, 11, 57), 'P')
+        p.rect((-1, 55, 1, 57), 'B')
         if not back:
-            p.poly([(-4, 36), (4, 36), (0, 41)], 'w')
-            p.line([(0, 41), (0, 54)], 'w')
+            p.poly([(-4, 44), (4, 44), (0, 48)], 'w')
+            p.line([(0, 48), (0, 54)], 'w')
+    elif back:
+        p.poly([(-13, 44), (13, 44), (13, 51), (-13, 51)], 'N')
+        p.line([(-13, 49), (13, 49)], 'W')
     else:
-        if back:
-            p.poly([(-11, 36), (11, 36), (11, 45), (-11, 45)], 'N')
-            p.line([(-11, 43), (11, 43)], 'W')
-        else:
-            p.poly([(-11, 36), (11, 36), (8, 42), (0, 47), (-8, 42)], 'N')
-            p.poly([(-5, 36), (5, 36), (0, 43)], 'W')
-            p.poly([(-3, 44), (3, 44), (2, 50), (-2, 50)], 'R')
-            p.poly([(-3, 44), (-6, 47), (-3, 47)], 'R')
-            p.poly([(3, 44), (6, 47), (3, 47)], 'R')
+        p.poly([(-13, 44), (13, 44), (10, 49), (0, 53), (-10, 49)], 'N')
+        p.poly([(-5, 44), (5, 44), (0, 50)], 'W')
+        p.poly([(-3, 51), (3, 51), (2, 56), (-2, 56)], 'R')
+        p.poly([(-3, 51), (-7, 54), (-3, 54)], 'R')
+        p.poly([(3, 51), (7, 54), (3, 54)], 'R')
 
 
 def body_side(p, ch, step):
     girl = ch['gender'] == 'girl'
     swing = {0: -3, 1: 0, 2: 3}[step]
     if girl:
-        p.poly([(-7, 56), (7, 56), (11, 72), (-11, 72)], 'K')
-        p.line([(-3, 60), (-5, 72)], 'k')
-        p.line([(3, 60), (5, 72)], 'k')
-    p.poly([(-7, 36), (7, 36), (6, 57), (-6, 57)], 'w')
-    p.poly([(-6, 36), (6, 36), (5, 55), (-5, 55)], 'W')
+        p.poly([(-8, 55), (8, 55), (14, 80), (-14, 80)], 'K')
+        p.line([(-4, 59), (-7, 80)], 'k')
+        p.line([(4, 59), (7, 80)], 'k')
+    p.poly([(-9, 44), (9, 44), (8, 58), (-8, 58)], 'w')
+    p.poly([(-8, 44), (8, 44), (7, 56), (-7, 56)], 'W')
     if not girl:
-        p.rect((-6, 56, 6, 59), 'P')
+        p.rect((-8, 55, 8, 57), 'P')
     else:
-        p.poly([(0, 36), (8, 36), (8, 43), (2, 43)], 'N')
-        p.poly([(-7, 40), (-4, 40), (-4, 47), (-7, 47)], 'R')
-    # 手前の腕（歩くと前後にふれる）
-    p.rect((-2, 37, 3, 45), 'W', 'w')
-    p.poly([(-1, 46), (2, 46), (2 + swing, 59), (-1 + swing, 59)], 'S')
-    p.rect((-1 + swing, 59, 2 + swing, 61), 'S')
+        p.poly([(0, 44), (10, 44), (10, 50), (2, 50)], 'N')
+        p.poly([(-9, 48), (-6, 48), (-6, 54), (-9, 54)], 'R')
+    p.rect((-2, 45, 3, 51), 'W', 'w')  # 手前の腕（歩くと前後にふれる）
+    p.poly([(-1, 52), (2, 52), (2 + swing, 62), (-1 + swing, 62)], 'S')
+    p.rect((-1 + swing, 62, 2 + swing, 64), 'S')
 
 
 # ---------------- 頭 ----------------
 def head_front(p, ch):
+    p.k = HEAD_K
     boy = ch['gender'] == 'boy'
     if not boy:  # 肩までの髪（後ろ）とサイドテール
         p.rect((-14, 14, -10, 42), 'H', 'h')
@@ -199,6 +197,7 @@ def head_front(p, ch):
 
 
 def head_side(p, ch):
+    p.k = HEAD_K
     boy = ch['gender'] == 'boy'
     if not boy:
         p.poly([(1, 12), (13, 12), (12, 42), (4, 42)], 'h')
@@ -231,6 +230,7 @@ def head_side(p, ch):
 
 
 def head_back(p, ch):
+    p.k = HEAD_K
     boy = ch['gender'] == 'boy'
     p.rect((-3, 28, 3, 37), 's')
     if not boy:
@@ -272,10 +272,12 @@ def frame(ch, d, step):
         legs_front(lower, ch, step)
         body_front(upper, ch)
         head_front(upper, ch)
+        upper.k = 1
     elif side == 'up':
         legs_front(lower, ch, step)
         body_front(upper, ch, back=True)
         head_back(upper, ch)
+        upper.k = 1
     else:
         legs_side(lower, ch, step)
         body_side(upper, ch, step)
