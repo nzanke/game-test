@@ -10,7 +10,8 @@
 | `data/system.js` | タイトル、開始位置、主人公、メニュー、共通のマス記号 |
 | `data/items.js` | アイテムとカード |
 | `data/commons.js` | コモンイベント（どこからでも呼べる命令のまとまり） |
-| `data/maps/*.js` | 部屋（マップ）1つにつき1ファイル |
+| `data/maps/*.js` | 部屋（マップ）1つにつき1ファイル。`school_*.js` は生成したもの（下の「校舎」） |
+| `data/story.js` | 生成したマップに足すお話のイベント |
 | `data/tilesets/*.js` | タイル素材（画像として開けない形にしたもの） |
 
 マップを足したら、`index.html` の「データ」の所に `<script src="data/maps/○○.js"></script>` を1行足す。
@@ -20,7 +21,7 @@
 ```js
 G.defineMap('room1', {
   name: '自室',            // セーブ画面に出る名前
-  tiles: [                 // 17文字×13行。1文字が1マス（48px）
+  tiles: [                 // 1文字が1マス（48px）。横17×縦13で1画面。それより大きいと主人公について画面が動く
     '#################',
     ...
   ],
@@ -37,6 +38,8 @@ G.defineMap('room1', {
   ],
   bg: 'img/rooms/room1.png',  // （任意）一枚絵の背景。816×624。マス記号は通れるかどうかだけに使われる
   bgm: 'audio/bgm/xxx.ogg',   // （任意）この部屋のBGM。null で止める
+  signs: [{ x: 5, y: 0, text: '1の1' }],  // （任意）名札。マスの上に札を描く
+  exit: { door: '保健室' },   // （任意）['back'] で、入ってきた記録がないときに戻る先（扉の名前か { map, x, y }）
   events: [ ... ],
 });
 ```
@@ -52,6 +55,21 @@ G.defineMap('room1', {
 | `.` `,` `:` `;` | 床（木・緑・寄せ木・灰色のじゅうたん） |
 
 壁は3段で、マップの上から3行（0〜2行目）に置く。
+
+## 校舎（生成するマップ）
+
+廊下と部屋の中は `python3 tools/gen_school.py` で生成する。部屋の並びや種類を変えたいときは、`tools/gen_school.py` の `BUILDINGS`（西から東への並び）と `ROOM_TYPES`（部屋の中の型）を直して動かす。生成したファイルは直接書き換えない。
+
+- マップID：本館 `main1f`〜`main4f`、特別教室棟 `annex1f`〜`annex4f`
+- 部屋の中の型：`classroom`（普通教室）`room_office` `room_lab` `room_music` `room_art` `room_pc` `room_lecture`
+- 扉の位置は `data/maps/school_doors.js`（扉の名前 → マップと座標）
+- 生成したマップにお話のイベントを足すときは、`data/story.js` に書く：
+
+```js
+G.addEvents('main1f', [
+  { id: 'yui', at: '保健室', dx: -5, dy: 3, pages: [ ... ] },  // at：扉の位置を基準に dx・dy ずらして置く
+]);
+```
 
 ## タイル素材
 
@@ -138,7 +156,9 @@ G.defineMap('room1', {
 
 | 命令 | 例 |
 |---|---|
-| 場所移動 | `['transfer', 'hall', 8, 6, 'up']`（5つ目に `{ fade: false }` で暗転なし） |
+| 場所移動 | `['transfer', 'main1f', 8, 5, 'up']`（5つ目に `{ fade: false }` で暗転なし） |
+| 部屋に入る | `['enter', 'classroom', 14, 3, 'down', '1の1']`（いまの場所を覚えて移動し、部屋名を出す） |
+| 入ってきた場所へ戻る | `['back']` |
 | 移動ルート | `['move', 'this', ['left', 'left', 'face:down', 'wait:30'], true]` |
 | フキダシ | `['balloon', 'player', '!']`（中の文字は自由） |
 

@@ -1,6 +1,7 @@
 // room1.js — 保健室（ゲームの始まり）
 G.defineMap('room1', {
   name: '保健室',
+  exit: { door: '保健室' },  // back で戻る先（入ってきた記録がないとき）
   // 17列×13行。記号の意味は system.js の legend（このマップだけの記号は legend に足す）
   tiles: [
     '#111111111117111#',
@@ -83,12 +84,12 @@ G.defineMap('room1', {
       ],
     },
     {
-      // 扉：ぶつかると隣の部屋へ
+      // 扉：ぶつかると廊下へ戻る
       id: 'door', x: 12, y: 2,
       pages: [
         { trigger: 'touch', priority: 'same', list: [
           ['se', 'door'],
-          ['transfer', 'hall', 4, 3, 'down'],
+          ['back'],
         ] },
       ],
     },

@@ -1,6 +1,7 @@
 // library.js — 図書室（ピクチャ演出・並列イベント・自律移動の見本）
 G.defineMap('library', {
   name: '図書室',
+  exit: { door: '図書室' },
   tiles: [
     '#444444474444444#',
     '#555555585555555#',
@@ -33,7 +34,7 @@ G.defineMap('library', {
   events: [
     {
       id: 'toHall', x: 8, y: 2,
-      pages: [{ trigger: 'touch', priority: 'same', list: [['se', 'door'], ['transfer', 'hall', 12, 3, 'down']] }],
+      pages: [{ trigger: 'touch', priority: 'same', list: [['se', 'door'], ['back']] }],
     },
     {
       id: 'oldBook', x: 2, y: 6,

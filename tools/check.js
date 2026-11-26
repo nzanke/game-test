@@ -73,6 +73,7 @@ function checkList(list, where, map) {
       case 'loop': checkList(a[0], w + '（くり返し）', map); break;
       case 'common': if (!D.commons[a[0]]) err(w, `コモンイベント「${a[0]}」がありません`); break;
       case 'item': case 'getItem': if (!D.items[a[0]]) err(w, `アイテム「${a[0]}」がありません`); break;
+      case 'enter':
       case 'transfer': {
         const m = D.maps[a[0]];
         if (!m) { err(w, `マップ「${a[0]}」がありません`); break; }
@@ -103,9 +104,11 @@ for (const [id, it] of Object.entries(D.items)) {
 // マップ
 for (const [id, m] of Object.entries(D.maps)) {
   const where = `マップ「${id}」`, lg = legendOf(m);
-  if (!Array.isArray(m.tiles) || m.tiles.length !== G.ROWS) err(where, `tiles は${G.ROWS}行にしてください（今は${(m.tiles || []).length}行）`);
-  (m.tiles || []).forEach((row, y) => {
-    if ([...row].length !== G.COLS) err(where, `${y + 1}行目が${[...row].length}文字です（${G.COLS}文字にする）`);
+  if (!Array.isArray(m.tiles) || !m.tiles.length) { err(where, 'tiles がありません'); continue; }
+  const MW = [...m.tiles[0]].length, MH = m.tiles.length;
+  if (MW < G.COLS || MH < 1) err(where, `横は${G.COLS}マス以上にしてください`);
+  m.tiles.forEach((row, y) => {
+    if ([...row].length !== MW) err(where, `${y + 1}行目が${[...row].length}文字です（1行目と同じ${MW}文字にする）`);
     for (const ch of row) if (!lg.has(ch)) err(where, `${y + 1}行目の記号「${ch}」が legend にありません`);
   });
   for (const [ch, lg] of Object.entries(m.legend || {})) if (lg.tile) checkTile(lg.tile, `${where} の記号「${ch}」`);
@@ -113,15 +116,24 @@ for (const [id, m] of Object.entries(D.maps)) {
     const ow = `${where} の objects ${i + 1}番目`;
     checkTile(o.tile, ow);
     const [, , , w = 1, h = 1] = o.tile || [];
-    if (!(o.x >= 0 && o.y >= 0 && o.x + w <= G.COLS && o.y + h <= G.ROWS)) err(ow, `位置 (${o.x},${o.y}) がマップからはみ出しています`);
+    if (!(o.x >= 0 && o.y >= 0 && o.x + w <= MW && o.y + h <= MH)) err(ow, `位置 (${o.x},${o.y}) がマップからはみ出しています`);
+  });
+  if (m.exit && m.exit.door && !(D.doors || {})[m.exit.door]) err(where, `exit の扉「${m.exit.door}」がありません`);
+  for (const s of m.signs || []) if (!(s.x >= 0 && s.x < MW && s.y >= 0 && s.y < MH)) err(where, `名札「${s.text}」がマップの外です`);
+  const extra = ((D.extraEvents || {})[id] || []).map((ev) => {
+    if (!ev.at) return ev;
+    const d = (D.doors || {})[ev.at];
+    if (!d) { err(`${where}（story）`, `扉「${ev.at}」がありません`); return ev; }
+    if (d.map !== id) err(`${where}（story）`, `扉「${ev.at}」は ${d.map} にあります`);
+    return Object.assign({}, ev, { x: d.x + (ev.dx || 0), y: d.y + (ev.dy || 0) });
   });
   const ids = new Set();
-  for (const e of m.events || []) {
+  for (const e of [...(m.events || []), ...extra]) {
     const ew = `${where} のイベント「${e.id}」`;
     if (!e.id) err(where, 'id のないイベントがあります');
     if (ids.has(e.id)) err(ew, 'id が重複しています');
     ids.add(e.id);
-    if (!(e.x >= 0 && e.x < G.COLS && e.y >= 0 && e.y < G.ROWS)) err(ew, `位置 (${e.x},${e.y}) がマップの外です`);
+    if (!(e.x >= 0 && e.x < MW && e.y >= 0 && e.y < MH)) err(ew, `位置 (${e.x},${e.y}) がマップの外です`);
     (e.pages || []).forEach((p, i) => {
       const pw = `${ew} の${i + 1}ページ目`;
       if (p.trigger && !TRIGGERS.includes(p.trigger)) err(pw, `trigger「${p.trigger}」は ${TRIGGERS.join('/')} のどれか`);

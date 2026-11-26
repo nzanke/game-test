@@ -100,6 +100,26 @@
       W().loadMap(map, x, y, dir || W().player.dir);
       if (fade) yield* fadeTo(0, 15);
     },
+    // 部屋に入る：いまの場所を覚えてから移動し、部屋名を出す（出るときは back）
+    *enter(map, x, y, dir, label) {
+      const p = W().player, S = W().S;
+      (S.back = S.back || []).push({ map: S.map, x: p.x, y: p.y, dir: 'down' });
+      if (S.back.length > 20) S.back.shift();
+      yield* CMD.transfer.call(this, map, x, y, dir || 'down');
+      if (label) G.popup.show(G.fmt(label), 100);
+    },
+    // 入ってきた場所へ戻る。覚えていなければマップの exit（{ door: '扉の名前' } か { map, x, y }）へ
+    *back() {
+      const S = W().S;
+      let to = (S.back || []).pop();
+      if (!to) {
+        const ex = W().map.exit || {};
+        const d = ex.door ? (G.data.doors || {})[ex.door] : ex;
+        if (d && d.map) to = { map: d.map, x: d.x, y: d.y + (ex.door ? 1 : 0), dir: 'down' };
+      }
+      if (!to) { console.warn('戻り先がありません'); return; }
+      yield* CMD.transfer.call(this, to.map, to.x, to.y, to.dir);
+    },
     *move(target, steps, wait = true) {
       const c = resolve(this, target);
       if (!c) return;

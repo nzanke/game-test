@@ -135,9 +135,17 @@
       this.map = m;
       this.S.map = id;
       this.legend = Object.assign({}, DEFAULT_LEGEND, G.data.system.legend || {}, m.legend || {});
+      this.mh = m.tiles.length;
+      this.mw = Math.max(...m.tiles.map((r) => r.length));
       this.player = new Char(x, y, dir);
       this.player.look = (G.data.system.player || {}).char || { shape: 'person', color: '#4a7bd0' };
-      this.events = (m.events || []).map((def) => ({
+      const extra = ((G.data.extraEvents || {})[id] || []).map((ev) => {
+        if (!ev.at) return ev;
+        const d = (G.data.doors || {})[ev.at];
+        if (!d) { console.warn('扉がありません: ' + ev.at); return ev; }
+        return Object.assign({}, ev, { x: d.x + (ev.dx || 0), y: d.y + (ev.dy || 0) });
+      });
+      this.events = [...(m.events || []), ...extra].map((def) => ({
         def, id: def.id, char: new Char(def.x, def.y, def.dir), page: null, pageIndex: -1, erased: false, interp: null,
       }));
       this.solidCells = new Set();
@@ -153,12 +161,12 @@
     },
     buildMapCanvas() {
       const c = document.createElement('canvas');
-      c.width = G.W; c.height = G.H;
+      c.width = this.mw * T; c.height = this.mh * T;
       const ctx = c.getContext('2d');
       ctx.fillStyle = this.map.bgColor || '#000';
-      ctx.fillRect(0, 0, G.W, G.H);
-      for (let y = 0; y < G.ROWS; y++) {
-        for (let x = 0; x < G.COLS; x++) {
+      ctx.fillRect(0, 0, c.width, c.height);
+      for (let y = 0; y < this.mh; y++) {
+        for (let x = 0; x < this.mw; x++) {
           const lg = this.legend[this.tileAt(x, y)];
           if (!lg) continue;
           ctx.fillStyle = lg.color || '#000';
@@ -179,6 +187,15 @@
         }
       }
       for (const o of this.map.objects || []) if (!o.above) G.drawTile(ctx, o.tile, o.x * T, o.y * T, o.x);
+      // 名札（扉の上の部屋名など）
+      for (const s of this.map.signs || []) {
+        ctx.font = G.font(14, true);
+        const w = Math.max(40, ctx.measureText(s.text).width + 14), cx = s.x * T + T / 2, y = s.y * T + 6;
+        G.roundRect(ctx, cx - w / 2, y, w, 22, 4);
+        ctx.fillStyle = '#fbfaf3'; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = '#5a4a3a'; ctx.stroke();
+        G.text(ctx, s.text, cx, y + 4, 14, '#2a2420', 'center', true);
+      }
       this.mapCanvas = c;
     },
 
@@ -189,7 +206,7 @@
       return !!lg && !lg.solid && !this.solidCells.has(x + ',' + y);
     },
     passable(x, y, mover) {
-      if (x < 0 || y < 0 || x >= G.COLS || y >= G.ROWS) return false;
+      if (x < 0 || y < 0 || x >= this.mw || y >= this.mh) return false;
       if (!this.tilePassable(x, y)) return false;
       for (const e of this.events) {
         if (e.char === mover || e.erased || !e.page) continue;
@@ -345,11 +362,21 @@
     },
 
     // ---------------- 描画 ----------------
+    // 画面の左上が、マップのどこにあたるか（小さいマップは中央に置く）
+    camera() {
+      const p = this.player, mw = this.mw * T, mh = this.mh * T;
+      const cx = mw <= G.W ? -(G.W - mw) / 2 : Math.max(0, Math.min(mw - G.W, p.rx + T / 2 - G.W / 2));
+      const cy = mh <= G.H ? -(G.H - mh) / 2 : Math.max(0, Math.min(mh - G.H, p.ry + T / 2 - G.H / 2));
+      return [Math.round(cx), Math.round(cy)];
+    },
     draw(ctx) {
       const sh = this.fx.shake;
       const ox = sh ? Math.round(Math.sin(sh.t * 1.8) * sh.power * (1 - sh.t / sh.dur)) : 0;
+      const [cx, cy] = this.camera();
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, G.W, G.H);
       ctx.save();
-      ctx.translate(ox, 0);
+      ctx.translate(ox - cx, -cy);
       ctx.drawImage(this.mapCanvas, 0, 0);
       const bg = G.img(this.map.bg);
       if (bg) ctx.drawImage(bg, 0, 0, G.W, G.H);
@@ -361,6 +388,9 @@
       for (const o of this.map.objects || []) if (o.above) G.drawTile(ctx, o.tile, o.x * T, o.y * T, o.x);
       this.drawSensor(ctx);
       for (const o of list) if (o.c.balloon) drawBalloon(ctx, o.c);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(ox, 0);
       this.drawPics(ctx);
       ctx.restore();
       const t = this.S.tint;

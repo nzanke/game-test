@@ -11,6 +11,10 @@
     defineCommons(o) { Object.assign(this.data.commons, o); },
     defineSystem(o) { Object.assign(this.data.system, o); },
     defineTileset(id, def) { this.data.tilesets = this.data.tilesets || {}; this.data.tilesets[id] = def; },
+    // 扉の位置の一覧（名前 → { map, x, y }）。イベントの at: '名前' や back の戻り先に使う
+    defineDoors(o) { this.data.doors = Object.assign(this.data.doors || {}, o); },
+    // 生成したマップなどに、あとからイベントを足す
+    addEvents(mapId, evs) { const e = (this.data.extraEvents = this.data.extraEvents || {}); (e[mapId] = e[mapId] || []).push(...evs); },
     // 半角英数は BIZ UDGothic（index.html で英数字だけ読み込む）、それ以外は BIZ UDPGothic
     font(size, bold) {
       return `${bold ? 'bold ' : ''}${size}px "BIZ UDGothic","BIZ UDPGothic",sans-serif`;
@@ -147,6 +151,13 @@
   G.loadTilesets = function () {
     const defs = G.data.tilesets || {};
     return Promise.all(Object.entries(defs).map(([id, d]) => new Promise((resolve) => {
+      if (d.src) { // 自作のタイル（ふつうのPNG）
+        const im = new Image();
+        im.onload = () => { G.tilesets[id] = im; resolve(); };
+        im.onerror = () => { console.error('素材を読めません: ' + id); resolve(); };
+        im.src = d.src;
+        return;
+      }
       try {
         const bin = atob(d.data), bytes = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i) ^ TILE_KEY.charCodeAt(i % TILE_KEY.length);
