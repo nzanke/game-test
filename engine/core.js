@@ -135,11 +135,14 @@
   };
 
   // ---------------- 画像 ----------------
+  // 版の番号（index.html の ?v=…）。画像も古いものを使い回さないよう、この番号をつけて読む
+  G.ver = ((document.currentScript && document.currentScript.src.match(/[?&]v=([^&]+)/)) || [])[1] || '';
+  G.url = (src) => (G.ver && !/^(https?:|data:|blob:)/.test(src) ? src + (src.includes('?') ? '&' : '?') + 'v=' + G.ver : src);
   G.images = {};
   G.img = function (src) {
     if (!src) return null;
     let i = G.images[src];
-    if (!i) { i = new Image(); i.src = src; G.images[src] = i; }
+    if (!i) { i = new Image(); i.src = G.url(src); G.images[src] = i; }
     return i.complete && i.naturalWidth ? i : null;
   };
 
@@ -155,7 +158,7 @@
         const im = new Image();
         im.onload = () => { G.tilesets[id] = im; resolve(); };
         im.onerror = () => { console.error('素材を読めません: ' + id); resolve(); };
-        im.src = d.src;
+        im.src = G.url(d.src);
         return;
       }
       try {

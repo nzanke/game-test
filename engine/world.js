@@ -131,7 +131,13 @@
 
     loadMap(id, x, y, dir) {
       const m = G.data.maps[id];
-      if (!m) { console.error('マップがありません: ' + id); G.popup.show('マップがありません: ' + id); return; }
+      if (!m) {
+        // 古いセーブなどで、もう無いマップを指していたら開始地点へ
+        console.error('マップがありません: ' + id);
+        const st = G.data.system.start;
+        if (id !== st.map) { G.popup.show('マップが見つからないので、開始地点に戻りました'); return this.loadMap(st.map, st.x, st.y, st.dir); }
+        return;
+      }
       this.map = m;
       this.S.map = id;
       this.legend = Object.assign({}, DEFAULT_LEGEND, G.data.system.legend || {}, m.legend || {});
