@@ -2,250 +2,282 @@
 
 使い方：python3 tools/sprites/make_trial.py
 1コマ64×96px、横3コマ（左足・立ち・右足）×縦4段（下・左・右・上）、等倍。
-版3：リアル寄りのバランス（約4頭身）で、やや上から見下ろす角度（頭頂が見え顔は下寄り、体は下へすぼまる、肩の上面と靴の甲が見える）。
-頭は「頭の座標」で描き、HS 倍に縮めて置く（目だけは縮めると潰れるので、別に小さな目を描く）。
+版4：「イラストをドットに落とし込んだ」描き方。6倍の大きさでなめらかな面・グラデーション・柔らかい影と光で
+イラストとして描き、最後に64×96pxへ縮める（縮めるときに色が混ざって、輪郭や陰影がなめらかになる）。
+体つきは約4頭身・やや上から見下ろす角度（頭頂が見え顔は下寄り、体は下へすぼまる）。
+座標は 64×96 のコマの中の位置（x は体の中心 CX からのずれ）。
 """
 from pathlib import Path
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageChops, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
 FW, FH, CX = 64, 96, 32
-HS, HOY = 0.64, 7   # 頭の縮め方と、頭の上端の位置
-OUT = (44, 30, 44, 255)
-
-PAL = {
-    'H': '#2a2d48', 'h': '#1a1b2e', 'L': '#5b6aa8', 'l': '#3c4675',   # 髪（黒に青いつや）
-    'S': '#fbe3d2', 's': '#efc4ad', 't': '#dea48c', 'p': '#f6a6a6',   # 肌・影・赤み
-    'E': '#2b1a2a', 'I': '#4b2a7a', 'J': '#7c4fc0', 'K': '#b691ee', 'e': '#ffffff',  # 目
-    'm': '#d0706e', 'R': '#d8344a', 'r': '#9c1f33',                   # 口・リボン
-    'W': '#fbfbf7', 'w': '#d9dbe4',                                   # ブラウス
-    'C': '#efe2c6', 'c': '#d2bf98', 'v': '#fbf4e2',                   # カーディガン（v：肩の上面）
-    'G': '#7d8193', 'g': '#5c6072', 'x': '#b84a5a',                   # スカート（チェック）
-    'T': '#2a2730', 'u': '#3f3b48', 'B': '#3a2a26', 'b': '#6b5248',   # タイツ・靴
-}
+SS = 6  # 描くときの倍率
 
 
-class Pen:
-    """head=True のときは頭の座標（大きく描いた座標）を HS 倍に縮めて置く"""
-
-    def __init__(self, head=False):
-        self.head = head
-        self.pal = {k: tuple(int(v[i:i + 2], 16) for i in (1, 3, 5)) + (255,) for k, v in PAL.items()}
-        self.im = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
-        self.d = ImageDraw.Draw(self.im)
-
-    def t(self, x, y):
-        if self.head:
-            return (round(CX + x * HS), round(HOY + y * HS))
-        # やや上から見下ろす：首（y26）より下は、下へ行くほど縦に詰め、横幅も少しずつ細くする
-        if y <= 26:
-            return (CX + x, y + 5)
-        k = (y - 26) / 66
-        return (round(CX + x * (1.04 - 0.14 * k)), round(31 + (y - 26) * 0.92))
-
-    def ell(self, x0, y0, x1, y1, k):
-        self.d.ellipse(self.t(x0, y0) + self.t(x1, y1), fill=self.pal[k])
-
-    def rect(self, x0, y0, x1, y1, k):
-        self.d.rectangle(self.t(x0, y0) + self.t(x1, y1), fill=self.pal[k])
-
-    def poly(self, pts, k):
-        self.d.polygon([self.t(x, y) for x, y in pts], fill=self.pal[k])
-
-    def line(self, pts, k):
-        self.d.line([self.t(x, y) for x, y in pts], fill=self.pal[k])
-
-    def px(self, pts, k):
-        for x, y in pts:
-            self.d.point(self.t(x, y), fill=self.pal[k])
+def rgb(h):
+    return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
 
 
-LIFT = {0: (2, 0), 1: (0, 0), 2: (0, 2)}
+C = {k: rgb(v) for k, v in {
+    'hair1': '#343a62', 'hair2': '#16172a', 'hairL': '#7d8fd6', 'hairLine': '#0e0f1c',
+    'skin1': '#fff0e4', 'skin2': '#f4cdb6', 'skinS': '#d99b86', 'skinLine': '#a8685a', 'blush': '#ff8f96',
+    'eyeW': '#ffffff', 'iris1': '#2a1650', 'iris2': '#8a5ad8', 'iris3': '#d8c2ff', 'lash': '#1a0f1c',
+    'mouth': '#c85a5e', 'ribbon1': '#ee4a5e', 'ribbon2': '#9a1f34',
+    'blouse1': '#ffffff', 'blouse2': '#d8dbe6', 'card1': '#f7ecd4', 'card2': '#cdb88f', 'cardLine': '#8c7754',
+    'skirt1': '#8e93a6', 'skirt2': '#4f5366', 'plaid': '#3f4252', 'plaidR': '#b84a5a',
+    'tights1': '#4a4556', 'tights2': '#1c1a22', 'shoe1': '#7a5a4c', 'shoe2': '#2e201c', 'line': '#2a1e2a',
+}.items()}
 
 
-# ---------------- 下半身（脚は長め） ----------------
-def legs(p, step, side):
+class Art:
+    """6倍の大きさで描く画用紙。部品ごとに「形（マスク）」を作って、塗り・影・光・輪郭をつける"""
+
+    def __init__(self):
+        self.W, self.H = FW * SS, FH * SS
+        self.im = Image.new('RGBA', (self.W, self.H), (0, 0, 0, 0))
+
+    @staticmethod
+    def P(x, y):
+        return ((CX + x) * SS, y * SS)
+
+    def mask(self, shapes):
+        m = Image.new('L', (self.W, self.H), 0)
+        d = ImageDraw.Draw(m)
+        for kind, *a in shapes:
+            if kind == 'e':
+                x0, y0, x1, y1 = a
+                d.ellipse(self.P(x0, y0) + self.P(x1, y1), fill=255)
+            elif kind == 'p':
+                d.polygon([self.P(x, y) for x, y in a[0]], fill=255)
+            elif kind == 'r':
+                x0, y0, x1, y1 = a
+                d.rectangle(self.P(x0, y0) + self.P(x1, y1), fill=255)
+        return m
+
+    def fill(self, m, c1, c2=None, alpha=1.0):
+        """マスクの範囲を、上 c1 → 下 c2 のグラデーションで塗る"""
+        box = m.getbbox()
+        if not box:
+            return
+        c2 = c2 or c1
+        g = Image.new('RGBA', (1, 256))
+        for i in range(256):
+            t = i / 255
+            g.putpixel((0, i), tuple(round(c1[j] + (c2[j] - c1[j]) * t) for j in range(3)) + (255,))
+        x0, y0, x1, y1 = box
+        g = g.resize((x1 - x0, max(1, y1 - y0)))
+        layer = Image.new('RGBA', (self.W, self.H), (0, 0, 0, 0))
+        layer.paste(g, (x0, y0))
+        a = m if alpha >= 1 else m.point(lambda v: round(v * alpha))
+        layer.putalpha(ImageChops.multiply(layer.getchannel('A'), a))
+        self.im.alpha_composite(layer)
+
+    def edge(self, m, dx, dy, blur):
+        """光の当たらない縁（右下）を取り出してぼかす。dx・dy は最終のピクセル単位"""
+        sh = ImageChops.offset(m, round(-dx * SS), round(-dy * SS))
+        e = ImageChops.subtract(m, sh).filter(ImageFilter.GaussianBlur(blur * SS))
+        return ImageChops.multiply(e, m)
+
+    def tint(self, m, color, alpha=1.0):
+        layer = Image.new('RGBA', (self.W, self.H), color + (0,))
+        layer.putalpha(m.point(lambda v: round(v * alpha)))
+        self.im.alpha_composite(layer)
+
+    def part(self, shapes, c1, c2, shade=None, light=None, line=None, lw=0.9, sh=(1.6, 2.2), sb=1.2, la=0.55):
+        m = self.mask(shapes)
+        self.fill(m, c1, c2)
+        if shade:
+            self.tint(self.edge(m, *sh, sb), shade, 0.75)
+        if light:
+            self.tint(self.edge(m, -1.2, -1.2, 0.8), light, la)
+        if line:
+            ring = ImageChops.subtract(m.filter(ImageFilter.MaxFilter(int(lw * SS) | 1)), m)
+            self.tint(ring, line, 0.95)
+        return m
+
+    def clip(self, m, shapes, color, alpha=1.0, blur=0):
+        """形 shapes を m の範囲に切り抜いて色をのせる（影や模様）"""
+        s = self.mask(shapes)
+        if blur:
+            s = s.filter(ImageFilter.GaussianBlur(blur * SS))
+        self.tint(ImageChops.multiply(s, m), color, alpha)
+
+    def stroke(self, pts, color, w=0.6, alpha=1.0, blur=0):
+        layer = Image.new('L', (self.W, self.H), 0)
+        ImageDraw.Draw(layer).line([self.P(x, y) for x, y in pts], fill=255, width=max(1, round(w * SS)), joint='curve')
+        if blur:
+            layer = layer.filter(ImageFilter.GaussianBlur(blur * SS))
+        self.tint(layer, color, alpha)
+
+    def blob(self, x0, y0, x1, y1, color, alpha, blur):
+        m = self.mask([('e', x0, y0, x1, y1)])
+        if blur:
+            m = m.filter(ImageFilter.GaussianBlur(blur * SS))
+        self.tint(m, color, alpha)
+
+    def shrink(self):
+        im = self.im.resize((FW, FH), Image.BOX)
+        return im.filter(ImageFilter.UnsharpMask(radius=0.6, percent=60, threshold=0))
+
+
+LIFT = {0: (1.6, 0), 1: (0, 0), 2: (0, 1.6)}
+
+
+# ---------------- 部品 ----------------
+def back_hair(a, side, bob):
+    b = bob
+    if side == 'down':
+        pts = [(-10.5, 12 + b), (10.5, 12 + b), (11.5, 50 + b), (9, 57 + b), (4, 54 + b), (0, 58 + b), (-4, 54 + b), (-9, 57 + b), (-11.5, 50 + b)]
+    elif side == 'up':
+        pts = [(-11.5, 11 + b), (11.5, 11 + b), (12.5, 52 + b), (9.5, 60 + b), (5, 57 + b), (0, 61 + b), (-5, 57 + b), (-9.5, 60 + b), (-12.5, 52 + b)]
+    else:
+        pts = [(-1, 11 + b), (10, 11 + b), (11.5, 48 + b), (9.5, 59 + b), (5, 56 + b), (2, 44 + b)]
+    m = a.part([('p', pts)], C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'])
+    xs = (-7, -3, 1, 5, 8) if side != 'left' else (3, 6, 8.5)
+    for x in xs:  # 毛の流れ
+        a.clip(m, [('p', [(x - 0.3, 14 + b), (x + 0.3, 14 + b), (x + (0.8 if x > 0 else -0.8), 56 + b), (x + (0.2 if x > 0 else -0.2), 56 + b)])], C['hairL'], 0.35)
+
+
+def legs(a, step, side):
     la, ra = LIFT[step]
     if side == 'left':
         if step == 1:
-            p.rect(-2, 62, 2, 88, 'T'); p.line([(1, 63), (1, 87)], 'u')
-            p.rect(-5, 88, 2, 92, 'B'); p.line([(-4, 88), (0, 88)], 'b')
+            a.part([('p', [(-2, 70), (2, 70), (1.6, 88), (-1.8, 88)])], C['tights1'], C['tights2'], shade=C['tights2'], line=C['line'])
+            a.part([('e', -5, 86.5, 2.5, 93)], C['shoe1'], C['shoe2'], light=(200, 170, 150), line=C['line'])
         else:
-            p.poly([(0, 62), (3, 62), (7, 88), (4, 88)], 'u')
-            p.rect(4, 87, 9, 91, 'B')
-            p.poly([(-3, 62), (0, 62), (-4, 88), (-7, 88)], 'T')
-            p.rect(-10, 88, -4, 92, 'B'); p.line([(-9, 88), (-6, 88)], 'b')
+            a.part([('p', [(0, 70), (3, 70), (6.5, 87), (3.5, 88)])], C['tights2'], C['tights2'], line=C['line'])
+            a.part([('e', 3, 85.5, 9.5, 91.5)], C['shoe1'], C['shoe2'], line=C['line'])
+            a.part([('p', [(-3, 70), (0, 70), (-3.5, 88), (-6.5, 87)])], C['tights1'], C['tights2'], shade=C['tights2'], line=C['line'])
+            a.part([('e', -10, 86.5, -3, 92.5)], C['shoe1'], C['shoe2'], light=(200, 170, 150), line=C['line'])
         return
-    p.rect(-5, 62, -2, 88 - la, 'T'); p.line([(-3, 63), (-3, 87 - la)], 'u')
-    p.rect(2, 62, 5, 88 - ra, 'T'); p.line([(4, 63), (4, 87 - ra)], 'u')
-    p.rect(-6, 88 - la, -1, 92 - la, 'B'); p.line([(-5, 88 - la), (-2, 88 - la)], 'b'); p.line([(-5, 89 - la), (-3, 89 - la)], 'b')
-    p.rect(1, 88 - ra, 6, 92 - ra, 'B'); p.line([(2, 88 - ra), (5, 88 - ra)], 'b'); p.line([(3, 89 - ra), (5, 89 - ra)], 'b')
+    for x0, x1, lift in ((-5, -1.6, la), (1.6, 5, ra)):
+        m = a.part([('p', [(x0, 70), (x1, 70), (x1 - 0.4, 88 - lift), (x0 + 0.4, 88 - lift)])], C['tights1'], C['tights2'], shade=C['tights2'], line=C['line'])
+        a.clip(m, [('r', (x0 + x1) / 2 - 0.4, 71, (x0 + x1) / 2 + 0.3, 87)], (110, 100, 125), 0.5, blur=0.4)
+        a.part([('e', x0 - 1.3, 86 - lift, x1 + 1.3, 93 - lift)], C['shoe1'], C['shoe2'], light=(210, 180, 160), line=C['line'], la=0.7)
 
 
-def skirt(p, side):
-    w0, w1 = (8, 11) if side != 'left' else (6, 9)
-    p.poly([(-w0, 46), (w0, 46), (w1, 63), (-w1, 63)], 'g')
-    p.poly([(-w0, 46), (w0 - 1, 46), (w1 - 1, 61), (-w1, 61)], 'G')
-    for x in range(-w1 + 3, w1, 4):
-        p.line([(round(x * 0.75), 47), (x, 62)], 'g')
-    p.line([(-w0 - 1, 52), (w0 + 1, 52)], 'g')
-    p.line([(-w1 + 1, 58), (w1 - 1, 58)], 'x')
+def skirt(a, side, bob):
+    b = bob
+    w0, w1 = (8.6, 11.2) if side != 'left' else (6.4, 9)
+    m = a.part([('p', [(-w0, 52 + b), (w0, 52 + b), (w1, 70 + b), (-w1, 70 + b)])], C['skirt1'], C['skirt2'], shade=C['skirt2'], line=C['line'])
+    for i in range(-3, 4):  # プリーツとチェック
+        x = i * (w1 / 3.6)
+        a.clip(m, [('p', [(x * 0.77 - 0.25, 52 + b), (x * 0.77 + 0.25, 52 + b), (x + 0.4, 70 + b), (x - 0.4, 70 + b)])], C['plaid'], 0.6)
+    a.clip(m, [('r', -12, 57.6 + b, 12, 58.3 + b)], C['plaid'], 0.55)
+    a.clip(m, [('r', -12, 64 + b, 12, 64.6 + b)], C['plaidR'], 0.85)
 
 
-# ---------------- 上半身（肩幅は控えめ、胴は長め） ----------------
-def torso_front(p, back):
-    p.rect(-2, 24, 2, 29, 's')
-    p.line([(-2, 25), (2, 25)], 't')
-    p.poly([(-9, 28), (9, 28), (8, 48), (-8, 48)], 'c')
-    p.poly([(-9, 28), (8, 28), (7, 47), (-8, 47)], 'C')
-    p.line([(-9, 28), (-4, 28)], 'v'); p.line([(4, 28), (8, 28)], 'v')  # 肩の上面
+def torso_front(a, back, bob):
+    b = bob
+    a.part([('r', -2, 30 + b, 2, 35 + b)], C['skin2'], C['skinS'], line=C['skinLine'])  # 首
+    m = a.part([('p', [(-9.6, 33.5 + b), (9.6, 33.5 + b), (8.6, 54 + b), (-8.6, 54 + b)])], C['card1'], C['card2'],
+               shade=C['card2'], light=(255, 250, 235), line=C['cardLine'])
     if not back:
-        p.poly([(-2, 28), (2, 28), (2, 47), (-2, 47)], 'W')
-        p.poly([(-4, 27), (0, 30), (4, 27), (3, 31), (0, 32), (-3, 31)], 'W')
-        p.poly([(-3, 30), (0, 32), (3, 30), (2, 34), (0, 33), (-2, 34)], 'R')
-        p.px([(0, 32)], 'r')
-        p.line([(-2, 29), (-2, 47)], 'c'); p.line([(2, 29), (2, 47)], 'c')
-        p.px([(-2, 37), (-2, 42)], 'c')
-        p.line([(-6, 39), (-4, 40)], 'c'); p.line([(6, 39), (4, 40)], 'c')  # 胸のしわ
+        a.part([('p', [(-2.2, 33.5 + b), (2.2, 33.5 + b), (2, 53.5 + b), (-2, 53.5 + b)])], C['blouse1'], C['blouse2'], line=C['cardLine'], lw=0.6)
+        a.part([('p', [(-4.4, 32.6 + b), (0, 35.6 + b), (4.4, 32.6 + b), (3.4, 36.6 + b), (0, 37.4 + b), (-3.4, 36.6 + b)])], C['blouse1'], C['blouse2'], line=C['line'], lw=0.5)
+        a.part([('p', [(-3, 35.6 + b), (0, 37.2 + b), (3, 35.6 + b), (2.4, 39.6 + b), (0, 38.4 + b), (-2.4, 39.6 + b)])], C['ribbon1'], C['ribbon2'], light=(255, 200, 205), line=C['ribbon2'], lw=0.5)
+        a.clip(m, [('e', -7, 42 + b, -3.5, 46 + b), ('e', 3.5, 42 + b, 7, 46 + b)], C['card2'], 0.5, blur=0.8)  # 胸のふくらみの影
+        for y in (41.5, 47.5):
+            a.blob(-2.9, y + b, -1.9, y + 1 + b, C['cardLine'], 0.9, 0)  # ボタン
     else:
-        p.line([(0, 31), (0, 46)], 'c')
-    for s in (-1, 1):  # 長袖の腕（腰まで）と手
-        p.poly([(s * 8, 29), (s * 11, 30), (s * 12, 49), (s * 9, 50)], 'c')
-        p.poly([(s * 8, 29), (s * 10, 30), (s * 11, 48), (s * 9, 49)], 'C')
-        p.line([(s * 8, 29), (s * 10, 30)], 'v')
-        p.ell(s * 11 - 2, 49, s * 11 + 1, 53, 'S')
-        p.px([(s * 11, 53)], 's')
+        a.clip(m, [('r', -0.3, 36 + b, 0.3, 53 + b)], C['card2'], 0.6)
+    for s in (-1, 1):  # 長袖の腕と手
+        arm = [(s * 8.2, 34 + b), (s * 10.8, 35 + b), (s * 11.6, 53.5 + b), (s * 9, 54.2 + b)]
+        a.part([('p', arm)], C['card1'], C['card2'], shade=C['card2'], line=C['cardLine'])
+        a.part([('e', s * 10.4 - 1.7, 53 + b, s * 10.4 + 1.7, 57.4 + b)], C['skin1'], C['skin2'], shade=C['skinS'], line=C['skinLine'], lw=0.6)
+        a.stroke([(s * 8.4, 33.8 + b), (s * 10.4, 34.6 + b)], (255, 252, 240), 0.7, 0.9)  # 肩の上面
 
 
-def torso_side(p, step):
-    swing = {0: -3, 1: 0, 2: 3}[step]
-    p.rect(-2, 24, 1, 29, 's')
-    p.poly([(-6, 28), (6, 28), (5, 48), (-5, 48)], 'c')
-    p.poly([(-6, 28), (5, 28), (4, 47), (-5, 47)], 'C')
-    p.line([(-5, 28), (4, 28)], 'v')
-    p.poly([(-6, 28), (-3, 28), (-4, 33)], 'W')
-    p.poly([(-7, 30), (-4, 31), (-6, 34)], 'R')
-    p.line([(-5, 37), (-3, 38)], 'c')
-    p.poly([(-2, 29), (2, 29), (2 + swing, 48), (-2 + swing, 48)], 'c')
-    p.poly([(-2, 29), (1, 29), (1 + swing, 47), (-2 + swing, 47)], 'C')
-    p.ell(-2 + swing, 47, 1 + swing, 51, 'S')
+def torso_side(a, step, bob):
+    b = bob
+    sw = {0: -2.6, 1: 0, 2: 2.6}[step]
+    a.part([('r', -1.8, 30 + b, 1.4, 35 + b)], C['skin2'], C['skinS'], line=C['skinLine'])
+    a.part([('p', [(-6.4, 33.5 + b), (6, 33.5 + b), (5, 54 + b), (-5.4, 54 + b)])], C['card1'], C['card2'], shade=C['card2'], light=(255, 250, 235), line=C['cardLine'])
+    a.part([('p', [(-6.6, 33.5 + b), (-3.2, 33.5 + b), (-4.4, 38.5 + b)])], C['blouse1'], C['blouse2'], line=C['line'], lw=0.5)
+    a.part([('p', [(-7.2, 36 + b), (-4.2, 37 + b), (-6.2, 40.5 + b)])], C['ribbon1'], C['ribbon2'], line=C['ribbon2'], lw=0.5)
+    a.part([('p', [(-2, 34.5 + b), (2.2, 34.5 + b), (2 + sw, 53.5 + b), (-2 + sw, 53.5 + b)])], C['card1'], C['card2'], shade=C['card2'], line=C['cardLine'])
+    a.part([('e', -1.8 + sw, 52.5 + b, 1.8 + sw, 57 + b)], C['skin1'], C['skin2'], line=C['skinLine'], lw=0.6)
 
 
-# ---------------- 頭（頭の座標で描き、縮めて置く） ----------------
-def hair_back_long(p, side):
-    """背中の中ほどまでの長い髪（体の座標）"""
-    if side == 'down':
-        p.poly([(-11, 10), (11, 10), (12, 50), (9, 58), (4, 55), (0, 59), (-4, 55), (-9, 58), (-12, 50)], 'h')
-        p.poly([(-10, 10), (10, 10), (11, 49), (8, 56), (4, 53), (0, 56), (-4, 53), (-8, 56), (-11, 49)], 'H')
-    elif side == 'up':
-        p.poly([(-12, 8), (12, 8), (13, 52), (10, 61), (5, 58), (0, 62), (-5, 58), (-10, 61), (-13, 52)], 'h')
-        p.poly([(-11, 8), (11, 8), (12, 51), (9, 59), (5, 56), (0, 59), (-5, 56), (-9, 59), (-12, 51)], 'H')
-        for x in (-7, -2, 3, 8):
-            p.line([(x, 22), (x + (1 if x > 0 else -1), 56)], 'l')
-    else:
-        p.poly([(-1, 8), (10, 8), (12, 48), (10, 60), (5, 57), (2, 44)], 'h')
-        p.poly([(0, 8), (9, 8), (11, 47), (9, 57), (5, 54), (3, 43)], 'H')
-        p.line([(6, 18), (8, 52)], 'l')
+def eye(a, cx, cy, flip=False, side=False):
+    """アニメ風の目：白目・グラデーションの瞳・瞳孔・光2つ・太い上まつげ"""
+    s = -1 if flip else 1
+    w, h = (3.6, 4.6) if not side else (2.6, 4.4)
+    a.part([('e', cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)], C['eyeW'], (235, 230, 245))
+    a.part([('e', cx - w / 2 + 0.3, cy - h / 2 + 0.2, cx + w / 2 - 0.3, cy + h / 2)], C['iris1'], C['iris2'])
+    a.blob(cx - 0.9, cy + 0.6, cx + 0.9, cy + 2.1, C['iris3'], 0.7, 0.3)
+    a.blob(cx - 0.6, cy - 0.9, cx + 0.6, cy + 0.6, (15, 8, 30), 0.9, 0)
+    a.blob(cx - s * 1.3 - 0.6, cy - 1.7, cx - s * 1.3 + 0.6, cy - 0.5, (255, 255, 255), 1.0, 0)
+    a.blob(cx + s * 0.9 - 0.35, cy + 0.9, cx + s * 0.9 + 0.35, cy + 1.6, (255, 255, 255), 0.9, 0)
+    x0, x1 = cx - w / 2 - 0.4, cx + w / 2 + 0.4
+    a.stroke([(x0, cy - h / 2 + 0.6), ((x0 + x1) / 2, cy - h / 2 - 0.2), (x1, cy - h / 2 + 0.4)], C['lash'], 0.9)
+    a.stroke([(cx + s * (w / 2 + 0.3), cy - h / 2 + 0.4), (cx + s * (w / 2 + 1.1), cy - h / 2 + 1.2)], C['lash'], 0.6)
+    a.stroke([(cx - w / 2 + 0.5, cy + h / 2 + 0.2), (cx + w / 2 - 0.5, cy + h / 2 + 0.2)], C['skinLine'], 0.35, 0.6)
 
 
-def head_front(p):
-    p.ell(-16, 4, 16, 34, 'h')
-    p.ell(-16, 4, 15, 32, 'H')
-    p.ell(-12, 15, 12, 36, 'S')
-    p.poly([(-12, 26), (12, 26), (10, 33), (4, 37), (0, 38), (-4, 37), (-10, 33)], 'S')
-    p.poly([(10, 28), (12, 26), (10, 33), (5, 37), (3, 37), (8, 33)], 's')
-    p.rect(-14, 9, 14, 18, 'H')
-    for x0, x1, y in [(-14, -8, 25), (-9, -3, 23), (-4, 2, 26), (1, 7, 22), (6, 12, 24), (11, 15, 27)]:
-        p.poly([(x0, 17), (x1, 17), ((x0 + x1) // 2 + 1, y)], 'H')
-    p.poly([(-16, 14), (-12, 14), (-11, 40), (-14, 44), (-16, 30)], 'H')
-    p.poly([(16, 14), (12, 14), (11, 40), (14, 44), (16, 30)], 'h')
-    p.line([(-11, 9), (-5, 7)], 'L'); p.line([(-4, 7), (2, 7)], 'L'); p.line([(4, 8), (9, 9)], 'l')
-    p.poly([(7, 11), (11, 9), (12, 11), (8, 13)], 'R')
+def head_front(a, bob):
+    b = bob
+    hm = a.part([('e', -10.6, 8.5 + b, 10.6, 30 + b)], C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'])
+    face = [('e', -7.6, 15 + b, 7.6, 30 + b), ('p', [(-7.6, 22.5 + b), (7.6, 22.5 + b), (6.2, 27.5 + b), (2.4, 30.8 + b), (0, 31.4 + b), (-2.4, 30.8 + b), (-6.2, 27.5 + b)])]
+    fm = a.part(face, C['skin1'], C['skin2'], shade=C['skinS'], sh=(1.2, 1.4), sb=1.0, line=C['skinLine'], lw=0.6)
+    a.clip(fm, [('r', -9, 14 + b, 9, 19.5 + b)], C['skinS'], 0.55, blur=0.9)  # 前髪の下の影
+    bang = [('r', -9.4, 11 + b, 9.4, 17 + b)]
+    for x0, x1, y in [(-9.4, -5.2, 21.5), (-6, -2, 20.3), (-2.8, 1.4, 22), (0.6, 4.6, 19.8), (3.8, 7.8, 21), (7, 9.8, 22.6)]:
+        bang.append(('p', [(x0, 16.5 + b), (x1, 16.5 + b), ((x0 + x1) / 2 + 0.5, y + b)]))
+    bm = a.part(bang, C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'], lw=0.7)
+    a.part([('p', [(-10.4, 15 + b), (-7.8, 15 + b), (-7.2, 31 + b), (-9.2, 34 + b), (-10.6, 25 + b)])], C['hair1'], C['hair2'], line=C['hairLine'], lw=0.7)
+    a.part([('p', [(10.4, 15 + b), (7.8, 15 + b), (7.2, 31 + b), (9.2, 34 + b), (10.6, 25 + b)])], C['hair2'], C['hair2'], line=C['hairLine'], lw=0.7)
+    a.clip(hm, [('e', -7.5, 11.6 + b, 1, 13.6 + b)], C['hairL'], 0.4, blur=0.6)  # つや（天使の輪。左上だけ柔らかく）
+    a.clip(bm, [('e', -7.5, 11.6 + b, 1, 13.6 + b)], C['hairL'], 0.3, blur=0.6)
+    eye(a, -3.8, 23.6 + b)
+    eye(a, 3.8, 23.6 + b, flip=True)
+    a.blob(-6.8, 26 + b, -3.2, 27.6 + b, C['blush'], 0.45, 0.6)
+    a.blob(3.2, 26 + b, 6.8, 27.6 + b, C['blush'], 0.45, 0.6)
+    a.blob(-0.35, 26.6 + b, 0.35, 27.4 + b, C['skinS'], 0.6, 0.2)
+    a.stroke([(-0.9, 29 + b), (0, 29.3 + b), (0.9, 29 + b)], C['mouth'], 0.5)
+    a.part([('p', [(4.6, 11.6 + b), (7.6, 10.4 + b), (8.2, 11.8 + b), (5.2, 13 + b)])], C['ribbon1'], C['ribbon2'], line=C['ribbon2'], lw=0.4)
 
 
-def head_side(p):
-    p.ell(-15, 4, 16, 34, 'h')
-    p.ell(-15, 4, 15, 32, 'H')
-    p.ell(-16, 15, 4, 36, 'S')
-    p.poly([(-16, 26), (2, 26), (0, 33), (-5, 37), (-9, 38), (-15, 33)], 'S')
-    p.poly([(-1, 28), (2, 26), (0, 33), (-5, 37), (-6, 36), (-2, 33)], 's')
-    p.rect(-15, 9, 3, 18, 'H')
-    for x0, x1, y in [(-16, -10, 25), (-11, -5, 23), (-6, 0, 25), (-1, 4, 22)]:
-        p.poly([(x0, 17), (x1, 17), ((x0 + x1) // 2, y)], 'H')
-    p.poly([(1, 12), (15, 12), (14, 36), (6, 40), (2, 30)], 'H')
-    p.line([(-8, 8), (-2, 7)], 'L'); p.line([(0, 7), (6, 8)], 'L')
-    p.poly([(8, 11), (12, 9), (13, 11), (9, 13)], 'R')
+def head_side(a, bob):
+    b = bob
+    hm = a.part([('e', -9.6, 8.5 + b, 10.4, 30 + b)], C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'])
+    fm = a.part([('e', -10.4, 15 + b, 2.6, 30 + b), ('p', [(-10.4, 22.5 + b), (1.4, 22.5 + b), (0, 28 + b), (-3.4, 30.8 + b), (-6, 31.4 + b), (-9.8, 28 + b)])],
+                C['skin1'], C['skin2'], shade=C['skinS'], line=C['skinLine'], lw=0.6)
+    a.clip(fm, [('r', -11, 14 + b, 3, 19.5 + b)], C['skinS'], 0.55, blur=0.9)
+    bang = [('r', -9.8, 11 + b, 2, 17 + b)]
+    for x0, x1, y in [(-10.4, -6.4, 21.5), (-7.2, -3.2, 20.3), (-4, 0, 21.6), (-0.8, 2.8, 19.6)]:
+        bang.append(('p', [(x0, 16.5 + b), (x1, 16.5 + b), ((x0 + x1) / 2, y + b)]))
+    a.part(bang, C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'], lw=0.7)
+    a.part([('p', [(0.6, 13 + b), (9.6, 13 + b), (9, 29 + b), (4, 32 + b), (1.2, 25 + b)])], C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'], lw=0.7)
+    a.clip(hm, [('e', -5, 11.6 + b, 4, 13.6 + b)], C['hairL'], 0.4, blur=0.6)
+    eye(a, -7.2, 23.6 + b, side=True)
+    a.blob(-9.6, 26 + b, -6.4, 27.6 + b, C['blush'], 0.45, 0.6)
+    a.stroke([(-10, 29 + b), (-9.2, 29.2 + b)], C['mouth'], 0.5)
+    a.part([('p', [(5, 11.6 + b), (8, 10.4 + b), (8.6, 11.8 + b), (5.6, 13 + b)])], C['ribbon1'], C['ribbon2'], line=C['ribbon2'], lw=0.4)
 
 
-def head_back(p):
-    p.ell(-16, 4, 16, 34, 'h')
-    p.ell(-16, 4, 15, 32, 'H')
-    p.line([(-11, 9), (-5, 7)], 'L'); p.line([(-4, 7), (2, 7)], 'L'); p.line([(4, 8), (9, 9)], 'l')
-    p.poly([(-12, 11), (-8, 9), (-7, 11), (-11, 13)], 'R')
-
-
-# 顔の細部は縮めずに体の座標で描く（縮めると潰れるため）
-def small_eye(p, x, flip=False):
-    """目（横3×縦4）：まつげ・瞳のグラデーション・光"""
-    f = (lambda dx: x - dx) if flip else (lambda dx: x + dx)
-    p.line([(f(-1), 17), (f(3), 17)], 'E')
-    for dx in range(3):
-        p.px([(f(dx), 18)], 'I'); p.px([(f(dx), 19)], 'J'); p.px([(f(dx), 20)], 'K')
-    p.px([(f(1), 18), (f(1), 19)], 'E')
-    p.px([(f(0), 18)], 'e')
-
-
-def face_front(p):
-    small_eye(p, -5)
-    small_eye(p, 5, flip=True)
-    p.px([(-6, 22), (-5, 22), (5, 22), (6, 22)], 'p')
-    p.px([(0, 21)], 't')
-    p.px([(0, 23)], 'm')
-
-
-def face_side(p):
-    p.line([(-9, 17), (-6, 17)], 'E')
-    p.px([(-8, 18), (-7, 18)], 'I'); p.px([(-8, 19), (-7, 19)], 'J'); p.px([(-8, 20), (-7, 20)], 'K')
-    p.px([(-8, 18)], 'e')
-    p.px([(-9, 22), (-8, 22)], 'p')
-    p.px([(-10, 23)], 'm')
-
-
-def outline(im):
-    src, out = im.load(), im.copy()
-    dst = out.load()
-    for y in range(FH):
-        for x in range(FW):
-            if not src[x, y][3] and any(
-                    0 <= x + dx < FW and 0 <= y + dy < FH and src[x + dx, y + dy][3]
-                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                dst[x, y] = OUT
-    return out
+def head_back(a, bob):
+    b = bob
+    hm = a.part([('e', -10.6, 8.5 + b, 10.6, 30 + b)], C['hair1'], C['hair2'], shade=C['hair2'], line=C['hairLine'])
+    a.clip(hm, [('e', -7.5, 11.6 + b, 1, 13.6 + b)], C['hairL'], 0.4, blur=0.6)
+    a.part([('p', [(-7.6, 11.6 + b), (-4.6, 10.4 + b), (-4, 11.8 + b), (-7, 13 + b)])], C['ribbon1'], C['ribbon2'], line=C['ribbon2'], lw=0.4)
 
 
 def frame(d, step):
     side = 'left' if d in ('left', 'right') else d
-    bob = 0 if step == 1 else 1
-    back_l, low, up, hd = Pen(), Pen(), Pen(), Pen(head=True)
+    bob = 0 if step == 1 else 0.6
+    a = Art()
     if side != 'up':
-        hair_back_long(back_l, side)
-    legs(low, step, side)
+        back_hair(a, side, bob)
+    legs(a, step, side)
     if side == 'left':
-        skirt(up, 'left'); torso_side(up, step); head_side(hd)
+        skirt(a, 'left', bob); torso_side(a, step, bob); head_side(a, bob)
     elif side == 'up':
-        skirt(up, 'down'); torso_front(up, True); hair_back_long(up, 'up'); head_back(hd)
+        skirt(a, 'down', bob); torso_front(a, True, bob); back_hair(a, 'up', bob); head_back(a, bob)
     else:
-        skirt(up, 'down'); torso_front(up, False); head_front(hd)
-    im = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
-    im.alpha_composite(back_l.im, (0, bob))
-    im.alpha_composite(low.im, (0, 0))
-    im.alpha_composite(up.im, (0, bob))
-    im.alpha_composite(hd.im, (0, bob))
-    if side == 'down':
-        fp = Pen(); face_front(fp); im.alpha_composite(fp.im, (0, bob))
-    elif side == 'left':
-        fp = Pen(); face_side(fp); im.alpha_composite(fp.im, (0, bob))
-    im = outline(im)
+        skirt(a, 'down', bob); torso_front(a, False, bob); head_front(a, bob)
+    im = a.shrink()
     return im.transpose(Image.FLIP_LEFT_RIGHT) if d == 'right' else im
 
 
