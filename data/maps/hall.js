@@ -2,47 +2,51 @@
 G.defineMap('hall', {
   name: '廊下',
   tiles: [
+    '#111711111117111#',
+    '#222822222228222#',
+    '#333933333339333#',
+    '#,,,,,,,,,,,,,,,#',
+    '#,,,,,,,,,,,,,,,#',
+    '#,,,,,,,,,,,,,,,#',
+    '#,,,,,,,,,,,,,,,#',
+    '#,,,,,,,,,,,,,,,#',
     '#################',
     '#################',
-    '#######D#########',
-    '#...............#',
-    '#...............#',
-    '#...............#',
-    '#...............#',
-    '########D########',
-    '                 ',
-    '                 ',
-    '                 ',
-    '                 ',
-    '                 ',
+    '#################',
+    '#################',
+    '#################',
   ],
-  legend: {
-    '.': { color: '#c9b79a' },
-  },
+  objects: [
+    { tile: ['school_in', 6, 20, 1, 2], x: 7, y: 2, solid: 'bottom' },  // ロッカー
+    { tile: ['school_in', 6, 20, 1, 2], x: 8, y: 2, solid: 'bottom' },  // ロッカー
+    { tile: ['school_in', 7, 20, 1, 2], x: 9, y: 2, solid: 'bottom' },  // ロッカー（灰）
+    { tile: ['school_in', 7, 34, 1, 2], x: 1, y: 2, solid: 'bottom' },  // 観葉植物
+    { tile: ['school_in', 7, 34, 1, 2], x: 15, y: 2, solid: 'bottom' }, // 観葉植物
+  ],
   events: [
     {
-      id: 'toRoom', x: 8, y: 7,
+      id: 'toRoom', x: 4, y: 2,
       pages: [
-        { trigger: 'touch', list: [['se', 'door'], ['transfer', 'room1', 8, 11, 'up']] },
+        { trigger: 'touch', priority: 'same', list: [['se', 'door'], ['transfer', 'room1', 12, 3, 'down']] },
       ],
     },
     {
       // 図書室の扉：鍵がないと開かない
-      id: 'libDoor', x: 7, y: 2,
+      id: 'libDoor', x: 12, y: 2,
       pages: [
-        { char: { shape: 'box', color: '#5b3a22' }, trigger: 'touch', list: [
+        { trigger: 'touch', priority: 'same', list: [
           ['if', { item: 'key' }, [
             ['se', 'door'],
-            ['transfer', 'library', 8, 11, 'up'],
+            ['transfer', 'library', 8, 3, 'down'],
           ], [
             ['se', 'buzzer'],
-            ['text', '', '鍵がかかっている。'],
+            ['text', '', '図書室の扉には鍵がかかっている。'],
           ]],
         ] },
       ],
     },
     {
-      id: 'yui', x: 12, y: 4, dir: 'left',
+      id: 'yui', x: 10, y: 5, dir: 'left',
       pages: [
         { char: { shape: 'person', color: '#d0587a', hair: '#7a3b1e' }, autoMove: ['wait:90', 'face:down', 'wait:90', 'face:left'], list: [
           ['text', 'ユイ', 'おはよう、ハル。カード探し、手伝ってくれるの？'],
@@ -78,7 +82,7 @@ G.defineMap('hall', {
       ],
     },
     {
-      id: 'card2', x: 2, y: 6,
+      id: 'card2', x: 2, y: 7,
       pages: [
         { char: { shape: 'card', color: '#3bb39a' }, list: [
           ['getItem', 'card2'],
@@ -90,7 +94,7 @@ G.defineMap('hall', {
     },
     {
       // 調べるだけのもの（見えないイベント）
-      id: 'window', x: 13, y: 2,
+      id: 'window', x: 14, y: 2,
       pages: [{ list: [['text', '', '窓の外はよく晴れている。']] }],
     },
   ],

@@ -373,7 +373,8 @@
         if (i === this.index) { G.roundRect(ctx, G.W / 2 - 130, y - 8, 260, 46, 8); ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill(); }
         G.text(ctx, s, G.W / 2, y, 26, i === 1 && !this.hasSave ? '#889' : '#fff', 'center');
       });
-      G.text(ctx, '移動：矢印キー　決定：Z／Enter　メニュー：X／Esc', G.W / 2, G.H - 40, 16, '#bbc', 'center');
+      G.text(ctx, '移動：矢印キー　決定：Z／Enter　メニュー：X／Esc', G.W / 2, G.H - 64, 16, '#bbc', 'center');
+      (sys.credits || []).forEach((c, i, a) => G.text(ctx, c, G.W / 2, G.H - 32 - (a.length - 1 - i) * 22, 16, '#dde', 'center'));
       if (this.t < 20) { ctx.fillStyle = `rgba(0,0,0,${1 - this.t / 20})`; ctx.fillRect(0, 0, G.W, G.H); }
       if (G.menu.active) G.menu.draw(ctx);
     },

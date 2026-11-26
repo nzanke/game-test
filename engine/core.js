@@ -10,6 +10,7 @@
     defineItems(o) { Object.assign(this.data.items, o); },
     defineCommons(o) { Object.assign(this.data.commons, o); },
     defineSystem(o) { Object.assign(this.data.system, o); },
+    defineTileset(id, def) { this.data.tilesets = this.data.tilesets || {}; this.data.tilesets[id] = def; },
     // 半角英数は BIZ UDGothic（index.html で英数字だけ読み込む）、それ以外は BIZ UDPGothic
     font(size, bold) {
       return `${bold ? 'bold ' : ''}${size}px "BIZ UDGothic","BIZ UDPGothic",sans-serif`;
@@ -136,6 +137,37 @@
     let i = G.images[src];
     if (!i) { i = new Image(); i.src = src; G.images[src] = i; }
     return i.complete && i.naturalWidth ? i : null;
+  };
+
+  // ---------------- タイル素材 ----------------
+  // 素材は data/tilesets/*.js に、そのままでは画像として開けない形（XOR）で入っている。
+  // 作り方：python3 tools/encode_tileset.py 元の画像.png ID
+  const TILE_KEY = 'game-test-tileset';
+  G.tilesets = {};
+  G.loadTilesets = function () {
+    const defs = G.data.tilesets || {};
+    return Promise.all(Object.entries(defs).map(([id, d]) => new Promise((resolve) => {
+      try {
+        const bin = atob(d.data), bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i) ^ TILE_KEY.charCodeAt(i % TILE_KEY.length);
+        const im = new Image();
+        im.onload = () => { G.tilesets[id] = im; resolve(); };
+        im.onerror = () => { console.error('素材を読めません: ' + id); resolve(); };
+        im.src = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+      } catch (e) { console.error('素材を読めません: ' + id, e); resolve(); }
+    })));
+  };
+  // ref = [素材ID, 列, 行, 幅, 高さ]。列を配列にすると、置く位置（x）で順に使い分ける
+  G.drawTile = function (ctx, ref, dx, dy, mx = 0) {
+    const [id, c, r, w = 1, h = 1] = ref;
+    const im = G.tilesets[id], d = (G.data.tilesets || {})[id];
+    if (!im || !d) return false;
+    const col = Array.isArray(c) ? c[mx % c.length] : c, S = d.size || 32;
+    const sm = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(im, col * S, r * S, w * S, h * S, dx, dy, w * G.T, h * G.T);
+    ctx.imageSmoothingEnabled = sm;
+    return true;
   };
 
   // ---------------- 描画の小道具 ----------------

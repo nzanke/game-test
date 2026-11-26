@@ -23,6 +23,25 @@ const TRIGGERS = ['action', 'touch', 'auto', 'parallel'];
 const COND_KEYS = ['switch', 'self', 'var', 'item', 'dir', 'script', 'all', 'any', 'not', 'is', 'count'];
 const MOVES = ['up', 'down', 'left', 'right', 'face', 'wait', 'speed', 'through', 'hide', 'show', 'facePlayer', 'random', 'toward'];
 const legendOf = (m) => new Set([...DEFAULT_LEGEND, ...Object.keys(D.system.legend || {}), ...Object.keys(m.legend || {})]);
+const TS = D.tilesets || {};
+function checkTile(ref, where, needSize) {
+  if (!Array.isArray(ref) || ref.length < 3) return err(where, 'tile は [素材ID, 列, 行(, 幅, 高さ)] の形で');
+  const [id, c, r, w = 1, h = 1] = ref, t = TS[id];
+  if (!t) return err(where, `素材「${id}」がありません（data/tilesets と index.html を確認）`);
+  for (const col of [].concat(c)) if (!(col >= 0 && col + w <= t.cols)) err(where, `素材「${id}」の列 ${col}（幅${w}）が範囲外です（0〜${t.cols - 1}）`);
+  if (!(r >= 0 && r + h <= t.rows)) err(where, `素材「${id}」の行 ${r}（高さ${h}）が範囲外です（0〜${t.rows - 1}）`);
+}
+for (const [ch, lg] of Object.entries(D.system.legend || {})) if (lg.tile) checkTile(lg.tile, `system.js の記号「${ch}」`);
+function objectSolids(m) {
+  const set = new Set();
+  for (const o of m.objects || []) {
+    if (o.solid === false) continue;
+    const [, , , w = 1, h = 1] = o.tile || [];
+    const rows = o.solid === 'bottom' ? [h - 1] : [...Array(h).keys()];
+    for (let i = 0; i < w; i++) for (const j of rows) set.add((o.x + i) + ',' + (o.y + j));
+  }
+  return set;
+}
 const solidOf = (m) => Object.assign({ '#': { solid: true }, ' ': { solid: true } }, D.system.legend || {}, m.legend || {});
 
 function checkCond(c, where) {
@@ -59,7 +78,7 @@ function checkList(list, where, map) {
         if (!m) { err(w, `マップ「${a[0]}」がありません`); break; }
         const ch = (m.tiles[a[2]] || '')[a[1]], sol = solidOf(m)[ch];
         if (ch === undefined) err(w, `移動先 (${a[1]},${a[2]}) がマップの外です`);
-        else if (sol && sol.solid) err(w, `移動先 (${a[1]},${a[2]}) は通れないマスです`);
+        else if ((sol && sol.solid) || objectSolids(m).has(a[1] + ',' + a[2])) err(w, `移動先 (${a[1]},${a[2]}) は通れないマスです`);
         break;
       }
       case 'move': checkSteps(a[1], w); // fallthrough
@@ -89,6 +108,13 @@ for (const [id, m] of Object.entries(D.maps)) {
     if ([...row].length !== G.COLS) err(where, `${y + 1}行目が${[...row].length}文字です（${G.COLS}文字にする）`);
     for (const ch of row) if (!lg.has(ch)) err(where, `${y + 1}行目の記号「${ch}」が legend にありません`);
   });
+  for (const [ch, lg] of Object.entries(m.legend || {})) if (lg.tile) checkTile(lg.tile, `${where} の記号「${ch}」`);
+  (m.objects || []).forEach((o, i) => {
+    const ow = `${where} の objects ${i + 1}番目`;
+    checkTile(o.tile, ow);
+    const [, , , w = 1, h = 1] = o.tile || [];
+    if (!(o.x >= 0 && o.y >= 0 && o.x + w <= G.COLS && o.y + h <= G.ROWS)) err(ow, `位置 (${o.x},${o.y}) がマップからはみ出しています`);
+  });
   const ids = new Set();
   for (const e of m.events || []) {
     const ew = `${where} のイベント「${e.id}」`;
@@ -102,13 +128,14 @@ for (const [id, m] of Object.entries(D.maps)) {
       if (p.priority && !['below', 'same', 'above'].includes(p.priority)) err(pw, `priority「${p.priority}」は below/same/above のどれか`);
       checkCond(p.cond, pw);
       if (p.autoMove) checkSteps(p.autoMove, pw);
+      if (p.char && p.char.tile) checkTile(p.char.tile, pw);
       checkList(p.list || [], pw, m);
     });
   }
 }
 if (st && D.maps[st.map]) {
   const ch = D.maps[st.map].tiles[st.y][st.x];
-  if ((solidOf(D.maps[st.map])[ch] || {}).solid) err('system.js', '開始位置が通れないマスです');
+  if ((solidOf(D.maps[st.map])[ch] || {}).solid || objectSolids(D.maps[st.map]).has(st.x + ',' + st.y)) err('system.js', '開始位置が通れないマスです');
 }
 
 console.log(`マップ ${Object.keys(D.maps).length}　アイテム ${Object.keys(D.items).length}　コモン ${Object.keys(D.commons).length}`);

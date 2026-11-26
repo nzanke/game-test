@@ -11,6 +11,7 @@
 | `data/items.js` | アイテムとカード |
 | `data/commons.js` | コモンイベント（どこからでも呼べる命令のまとまり） |
 | `data/maps/*.js` | 部屋（マップ）1つにつき1ファイル |
+| `data/tilesets/*.js` | タイル素材（画像として開けない形にしたもの） |
 
 マップを足したら、`index.html` の「データ」の所に `<script src="data/maps/○○.js"></script>` を1行足す。
 
@@ -24,16 +25,40 @@ G.defineMap('room1', {
     ...
   ],
   legend: {                // このマップだけのマス記号
-    'B': { solid: true, color: '#8fa6c9' },  // solid: true で通れない
+    'B': { solid: true, color: '#8fa6c9' },              // 色で塗る。solid: true で通れない
+    'T': { tile: ['school_in', 3, 1] },                   // 素材の3列目・1行目（0から数える）
+    'W': { solid: true, tile: ['school_in', [0, 1, 2], 6] }, // 列を配列にすると、横に並べたとき順に使い分ける
+    'P': { tile: ['school_in', 7, 34], base: '.' },       // base：下に別の記号の絵を敷く（透明な部分のある素材）
   },
+  objects: [               // 複数マスの家具など（床の上に重ねて描く）
+    { tile: ['school_in', 5, 14, 2, 2], x: 1, y: 4 },                  // [素材ID, 列, 行, 幅, 高さ]、x・y は左上のマス
+    { tile: ['school_in', 2, 20, 3, 2], x: 8, y: 2, solid: 'bottom' }, // 'bottom'：いちばん下の段だけ通れない（壁ぎわの家具）
+    { tile: ['school_in', 5, 19], x: 5, y: 1, solid: false },          // false：通れる。above: true でキャラより手前に描く
+  ],
   bg: 'img/rooms/room1.png',  // （任意）一枚絵の背景。816×624。マス記号は通れるかどうかだけに使われる
   bgm: 'audio/bgm/xxx.ogg',   // （任意）この部屋のBGM。null で止める
   events: [ ... ],
 });
 ```
 
-既定のマス記号：`#` 壁、`.` 床、` `（空白）黒い通れない所、`D` 扉の床。
-`system.js` の `legend` に書いた記号は全マップで使える。
+`system.js` の `legend` に書いた記号は全マップで使える。いま決めてあるもの：
+
+| 記号 | 意味 |
+|---|---|
+| `#` | 外側の暗い所（通れない） |
+| `1` `2` `3` | 窓のある壁（上・中・下の段） |
+| `4` `5` `6` | 窓のない壁（上・中・下の段） |
+| `7` `8` `9` | 引き戸（上・中・下の段。扉のイベントは `9` の位置に置く） |
+| `.` `,` `:` `;` | 床（木・緑・寄せ木・灰色のじゅうたん） |
+
+壁は3段で、マップの上から3行（0〜2行目）に置く。
+
+## タイル素材
+
+素材は「ドット絵世界」の学校素材（`school_in` 室内、`school_out` 屋外。どちらも32pxのマスが8列）。
+規約で素材の二次配布が禁止されているので、**元の画像はリポジトリに入れない**。
+`python3 tools/encode_tileset.py 元の画像.png ID` で、画像として開けない形の `data/tilesets/ID.js` を作り、`index.html` に読み込みを足す。
+著作権表示は `system.js` の `credits`（タイトル画面に出る）。
 
 ## イベント
 
@@ -49,7 +74,7 @@ G.defineMap('room1', {
 
 - **ページは「条件を満たすもののうち、いちばん後ろ」が選ばれる。** どれも満たさなければ、そのイベントは無いのと同じ
 - `trigger`：`action`（決定キーで調べる。省略時）／`touch`（触れたら）／`auto`（自動で1回ずつ。終わるまで操作できない）／`parallel`（並列。くり返し動き続ける）
-- `char`：見た目。`{ shape: 'person', color, hair }` 人／`'box'` 箱／`'card'` カード／`'icon', icon: '★'` 文字／`img: 'img/chars/x.png'` 画像。省略すると見えないイベント
+- `char`：見た目。`{ shape: 'person', color, hair }` 人／`'box'` 箱／`'card'` カード／`'icon', icon: '★'` 文字／`tile: ['school_in', 5, 38]` 素材／`img: 'img/chars/x.png'` 画像。省略すると見えないイベント
 - `priority`：`below`（下。上を歩ける）／`same`（通れない）／`above`（上）。省略時は、見た目があれば `same`、なければ `below`
 - `through: true`：すり抜け　`fixDir: true`：話しかけても振り向かない　`sensor: false`：近づいても「！」を出さない
 - `autoMove: ['left', 'wait:60', 'right']`：自律移動（くり返し）

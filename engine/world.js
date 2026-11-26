@@ -140,6 +140,13 @@
       this.events = (m.events || []).map((def) => ({
         def, id: def.id, char: new Char(def.x, def.y, def.dir), page: null, pageIndex: -1, erased: false, interp: null,
       }));
+      this.solidCells = new Set();
+      for (const o of m.objects || []) {
+        if (o.solid === false) continue;
+        const [, , , w = 1, h = 1] = o.tile;
+        const rows = o.solid === 'bottom' ? [h - 1] : [...Array(h).keys()];
+        for (let i = 0; i < w; i++) for (const j of rows) this.solidCells.add((o.x + i) + ',' + (o.y + j));
+      }
       this.buildMapCanvas();
       this.refresh();
       if (m.bgm !== undefined) { G.audio.bgm(m.bgm); this.S.bgm = m.bgm; }
@@ -156,6 +163,9 @@
           if (!lg) continue;
           ctx.fillStyle = lg.color || '#000';
           ctx.fillRect(x * T, y * T, T, T);
+          const base = lg.base && this.legend[lg.base];
+          if (base && base.tile) G.drawTile(ctx, base.tile, x * T, y * T, x);
+          if (lg.tile && G.drawTile(ctx, lg.tile, x * T, y * T, x)) continue;
           if (lg.solid && lg.color !== '#000000') {
             ctx.fillStyle = 'rgba(0,0,0,0.25)';
             ctx.fillRect(x * T, y * T + T - 6, T, 6); // 下に影をつけて立体っぽく
@@ -168,12 +178,16 @@
           if (lg.mark) G.text(ctx, lg.mark, x * T + T / 2, y * T + 12, 22, 'rgba(0,0,0,0.45)', 'center');
         }
       }
+      for (const o of this.map.objects || []) if (!o.above) G.drawTile(ctx, o.tile, o.x * T, o.y * T, o.x);
       this.mapCanvas = c;
     },
 
     eventById(id) { return this.events.find((e) => e.id === id); },
     tileAt(x, y) { const row = this.map.tiles[y]; return row === undefined ? undefined : row[x]; },
-    tilePassable(x, y) { const lg = this.legend[this.tileAt(x, y)]; return !!lg && !lg.solid; },
+    tilePassable(x, y) {
+      const lg = this.legend[this.tileAt(x, y)];
+      return !!lg && !lg.solid && !this.solidCells.has(x + ',' + y);
+    },
     passable(x, y, mover) {
       if (x < 0 || y < 0 || x >= G.COLS || y >= G.ROWS) return false;
       if (!this.tilePassable(x, y)) return false;
@@ -344,6 +358,7 @@
       list.push({ c: this.player, pri: 'same' });
       list.sort((a, b) => order[a.pri] - order[b.pri] || a.c.ry - b.c.ry);
       for (const o of list) drawChar(ctx, o.c, o.c.look);
+      for (const o of this.map.objects || []) if (o.above) G.drawTile(ctx, o.tile, o.x * T, o.y * T, o.x);
       this.drawSensor(ctx);
       for (const o of list) if (o.c.balloon) drawBalloon(ctx, o.c);
       this.drawPics(ctx);
@@ -413,7 +428,10 @@
     ctx.save();
     ctx.globalAlpha = c.opacity;
     const im = G.img(look.img);
-    if (im) {
+    if (look.tile) {
+      const h = look.tile[4] || 1;
+      G.drawTile(ctx, look.tile, x, y - (h - 1) * T, c.x);
+    } else if (im) {
       ctx.drawImage(im, x + T / 2 - im.width / 2, y + T - im.height);
     } else if (look.shape === 'person' || !look.shape) {
       const bob = c.moving ? Math.abs(Math.sin(c.stepAnim * 0.35)) * 3 : 0;

@@ -9,6 +9,7 @@ window.addEventListener('load', async () => {
       new Promise((r) => setTimeout(r, 2500)),
     ]);
   } catch (e) { /* 字体が読めなくても動かす */ }
+  await G.loadTilesets();
   G.start();
   G.goTitle();
 });

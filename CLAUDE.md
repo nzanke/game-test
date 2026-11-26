@@ -8,6 +8,7 @@
 - データを変えたら必ず `node tools/check.js` を通す
 - マップを足したら `index.html` に `<script>` を1行足す
 - 参考にした市販ゲームのファイル（データ・画像・音・シナリオ）はこのリポジトリに入れない
+- タイル素材（ドット絵世界）は二次配布禁止。元のPNGは入れず、`tools/encode_tileset.py` で変換した `data/tilesets/*.js` だけを入れる。タイトル画面の著作権表示（system.js の credits）は消さない
 - 字体：半角英数は BIZ UDGothic、日本語は BIZ UDPGothic（`G.font()` が両方を指定する）
 - 公開は gh-pages ブランチから。更新したら `git push origin main main:gh-pages` で両方に送る（Pages 設定のAPIは作業環境から使えない）
 - やりとりと説明は日本語で

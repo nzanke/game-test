@@ -2,31 +2,41 @@
 G.defineMap('library', {
   name: '図書室',
   tiles: [
+    '#444444474444444#',
+    '#555555585555555#',
+    '#666666696666666#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
+    '#:::::::::::::::#',
     '#################',
-    '#################',
-    '#sssss.....sssss#',
-    '#...............#',
-    '#sssss.....sssss#',
-    '#...............#',
-    '#...............#',
-    '#.....ttttt.....#',
-    '#.....ttttt.....#',
-    '#...............#',
-    '#...............#',
-    '#...............#',
-    '########D########',
   ],
-  legend: {
-    '.': { color: '#bfc7a8' },
-    't': { solid: true, color: '#a7804f' }, // 机
-  },
+  objects: [
+    { tile: ['school_in', 7, 9, 1, 2], x: 1, y: 2, solid: 'bottom' },   // 本棚（壁ぎわ）
+    { tile: ['school_in', 7, 9, 1, 2], x: 2, y: 2, solid: 'bottom' },
+    { tile: ['school_in', 7, 9, 1, 2], x: 3, y: 2, solid: 'bottom' },
+    { tile: ['school_in', 0, 39, 3, 2], x: 11, y: 2, solid: 'bottom' }, // 司書の机
+    { tile: ['school_in', 5, 38], x: 15, y: 3 },                        // 地球儀
+    { tile: ['school_in', 2, 18, 3, 2], x: 1, y: 5 },                   // 低い本棚
+    { tile: ['school_in', 2, 18, 3, 2], x: 5, y: 5 },
+    { tile: ['school_in', 2, 18, 3, 2], x: 9, y: 5 },
+    { tile: ['school_in', 2, 18, 3, 2], x: 13, y: 5 },
+    { tile: ['school_in', 0, 42, 3, 2], x: 6, y: 9 },                   // 閲覧机
+    { tile: ['school_in', 0, 42, 3, 2], x: 10, y: 9 },
+    { tile: ['school_in', 5, 19], x: 5, y: 0, solid: false },           // 時計
+  ],
   events: [
     {
-      id: 'toHall', x: 8, y: 12,
-      pages: [{ trigger: 'touch', list: [['se', 'door'], ['transfer', 'hall', 7, 3, 'down']] }],
+      id: 'toHall', x: 8, y: 2,
+      pages: [{ trigger: 'touch', priority: 'same', list: [['se', 'door'], ['transfer', 'hall', 12, 3, 'down']] }],
     },
     {
-      id: 'oldBook', x: 3, y: 4,
+      id: 'oldBook', x: 2, y: 6,
       pages: [
         { list: [
           ['text', '', '古い本が一冊だけ、逆さまに差してある。'],
@@ -54,7 +64,7 @@ G.defineMap('library', {
     },
     {
       // 本を開くまでカードは出てこない（ページの条件がどれも合わないと、イベントは無いのと同じ）
-      id: 'card3', x: 14, y: 3,
+      id: 'card3', x: 14, y: 8,
       pages: [
         { cond: { switch: 'bookOpened' }, char: { shape: 'card', color: '#5a5fd6' }, list: [
           ['getItem', 'card3'],
@@ -66,7 +76,7 @@ G.defineMap('library', {
     },
     {
       // 自律移動する猫
-      id: 'cat', x: 4, y: 10,
+      id: 'cat', x: 3, y: 11,
       pages: [
         { char: { shape: 'box', color: '#444', label: '猫' }, autoMove: ['right', 'wait:40', 'right', 'wait:60', 'left', 'wait:40', 'left', 'wait:60'], list: [
           ['balloon', 'this', '♪'],
