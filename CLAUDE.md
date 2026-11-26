@@ -9,4 +9,5 @@
 - マップを足したら `index.html` に `<script>` を1行足す
 - 参考にした市販ゲームのファイル（データ・画像・音・シナリオ）はこのリポジトリに入れない
 - 字体：半角英数は BIZ UDGothic、日本語は BIZ UDPGothic（`G.font()` が両方を指定する）
+- 公開は gh-pages ブランチから。更新したら `git push origin main main:gh-pages` で両方に送る（Pages 設定のAPIは作業環境から使えない）
 - やりとりと説明は日本語で
