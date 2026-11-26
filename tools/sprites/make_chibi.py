@@ -161,8 +161,8 @@ HAND = ['.oKLEE', 'oKMMKE', 'oLMMKE', 'oLLdKE', 'oKKEEE', '.EEE..']
 
 def hands(a, c):
     pal = {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']}
-    a.dots(-11, 38, HAND, pal)
-    a.dots(6, 38, [r[::-1] for r in HAND], pal)
+    a.dots(-12, 38, HAND, pal)
+    a.dots(7, 38, [r[::-1] for r in HAND], pal)
 
 
 def feet(a, c, side, step):
