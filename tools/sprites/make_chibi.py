@@ -2,7 +2,8 @@
 
 使い方：python3 tools/sprites/make_chibi.py
 1コマ48×48px、横3コマ（左足・立ち・右足）×縦4段（下・左・右・上）、等倍。
-描き方は make_trial.py と同じ「6倍でイラストとして描いて縮める」方式（道具も同じものを使う）。
+塗りは手本と同じくっきりしたドット絵（48×48pxに直接描く。ベタ塗り、段をつけた影と光、部品ごとに1ドットの濃い輪郭）。
+（Art = Chibi にすると、6倍で描いて縮める柔らかい塗りになる）
 比率は手本を測った値：頭（髪）y5〜33・横31px、前髪は目のすぐ上まで、大きな目（y25〜29）、首なし、胴 y33〜43、足 y44〜47。
 座標は 48×48 のコマの中の位置（x は体の中心からのずれ）。手本の絵は写さない。
 """
@@ -11,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import make_trial as mt  # noqa: E402
-from PIL import Image, ImageFilter  # noqa: E402
+from PIL import Image, ImageFilter, ImageChops, ImageDraw  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 FW = FH = 48
@@ -34,20 +35,73 @@ class Chibi(mt.Art):
         return im.filter(ImageFilter.UnsharpMask(radius=0.6, percent=70, threshold=0))
 
 
+class Pixel(Chibi):
+    """手本と同じ、くっきりしたドット絵の塗り：48×48pxに直接描く。ベタ塗り、影と光は段をつけ、部品ごとに1ドットの濃い輪郭"""
+
+    def __init__(self):
+        self.W, self.H = FW, FH
+        self.im = Image.new('RGBA', (FW, FH), (0, 0, 0, 0))
+
+    @staticmethod
+    def P(x, y):
+        return (round(CX + x), round(y))
+
+    def fill(self, m, c1, c2=None, alpha=1.0):
+        super().fill(m, c1, c1, alpha)
+
+    def edge(self, m, dx, dy, blur):
+        sh = ImageChops.offset(m, round(-dx), round(-dy))
+        e = ImageChops.subtract(m, sh)
+        return ImageChops.multiply(e.point(lambda v: 255 if v > 127 else 0), m)
+
+    def part(self, shapes, c1, c2, shade=None, light=None, line=None, lw=0.9, sh=(1.6, 2.2), sb=1.2, la=0.55):
+        m = self.mask(shapes)
+        self.fill(m, c1)
+        if shade:
+            self.tint(self.edge(m, *sh, 0), shade, 1.0)
+        if light:
+            self.tint(self.edge(m, -1, -1, 0), light, 1.0)
+        if line:
+            ring = ImageChops.subtract(m.filter(ImageFilter.MaxFilter(3)), m)
+            self.tint(ring, line, 1.0)
+        return m
+
+    def clip(self, m, shapes, color, alpha=1.0, blur=0):
+        self.tint(ImageChops.multiply(self.mask(shapes), m), color, alpha)
+
+    def dots(self, x0, y0, rows, pal):
+        """1ドットずつ描く：rows の文字を pal の色で置く（'.' は何もしない）"""
+        for j, row in enumerate(rows):
+            for i, ch in enumerate(row):
+                if ch != '.':
+                    self.im.putpixel((CX + x0 + i, y0 + j), pal[ch] + (255,))
+
+    def stroke(self, pts, color, w=0.6, alpha=1.0, blur=0):
+        layer = Image.new('L', (self.W, self.H), 0)
+        ImageDraw.Draw(layer).line([self.P(x, y) for x, y in pts], fill=255, width=1)
+        self.tint(layer, color, 1.0)
+
+    def blob(self, x0, y0, x1, y1, color, alpha, blur):
+        self.tint(self.mask([('e', x0, y0, x1, y1)]), color, 1.0 if alpha >= 0.5 else alpha)
+
+    def shrink(self):
+        return self.im
+
+
 BASE = {
     'skin1': '#fff0e4', 'skin2': '#f4cdb6', 'skinS': '#d99b86', 'skinLine': '#a8685a', 'blush': '#ff8f96',
     'eyeW': '#ffffff', 'lash': '#1a0f1c', 'mouth': '#c85a5e', 'line': '#2a1e2a',
 }
 CHARS = {
     'yui_chibi': dict(BASE, girl=True, **{
-        'hair1': '#343a62', 'hair2': '#16172a', 'hairL': '#7d8fd6', 'hairLine': '#0e0f1c',
-        'iris1': '#2a1650', 'iris2': '#8a5ad8', 'iris3': '#d8c2ff',
+        'hair1': '#343a62', 'hair2': '#16172a', 'hairL': '#55609a', 'hairLine': '#0e0f1c',
+        'iris1': '#5a3aa0', 'iris2': '#8a5ad8', 'iris3': '#d8c2ff',
         'top1': '#f7ecd4', 'top2': '#cdb88f', 'topLine': '#8c7754', 'inner': '#ffffff', 'ribbon1': '#ee4a5e', 'ribbon2': '#9a1f34',
         'low1': '#8e93a6', 'low2': '#4f5366', 'leg': '#2a2730', 'shoe1': '#7a5a4c', 'shoe2': '#2e201c',
     }),
     'haru_chibi': dict(BASE, girl=False, **{
-        'hair1': '#3c3f4c', 'hair2': '#16171d', 'hairL': '#8f96b0', 'hairLine': '#0d0d12',
-        'iris1': '#1e1614', 'iris2': '#6b4c3a', 'iris3': '#b08a70',
+        'hair1': '#3c3f4c', 'hair2': '#16171d', 'hairL': '#626778', 'hairLine': '#0d0d12',
+        'iris1': '#5a3a28', 'iris2': '#8a6040', 'iris3': '#c09a78',
         'top1': '#ffffff', 'top2': '#d6dbe6', 'topLine': '#7d8496', 'inner': '#f1c9b1', 'ribbon1': '#2a2420', 'ribbon2': '#2a2420',
         'low1': '#3d4360', 'low2': '#1b1e2c', 'leg': '#1b1e2c', 'shoe1': '#4a4446', 'shoe2': '#101012',
     }),
@@ -105,7 +159,21 @@ def body(a, c, side, step, back):
 
 
 # ---------------- 頭（大きく、前髪は目のすぐ上まで、目は大きく下寄り） ----------------
+EYE_GIRL = ['EEEE', 'Ewii', 'EIII', 'EIKI', '.EE.']   # まつげ・縁・白い光・瞳（濃い→明るい）
+EYE_BOY = ['EEE', 'Ewi', 'EII', '.E.']
+
+
 def eye(a, c, cx, flip=False, side=False):
+    if isinstance(a, Pixel):
+        rows = EYE_GIRL if c['girl'] else EYE_BOY
+        if side:
+            rows = [r[:3] if c['girl'] else r for r in rows]
+        if flip:
+            rows = [r[::-1] for r in rows]
+        w = len(rows[0])
+        pal = {'E': c['lash'], 'w': (255, 255, 255), 'i': c['iris1'], 'I': c['iris2'], 'K': c['iris3']}
+        a.dots(round(cx - w / 2), 25 if c['girl'] else 26, rows, pal)
+        return
     s = -1 if flip else 1
     w, h = (3.6, 4.6) if not side else (2.6, 4.4)
     cy = 27.2
@@ -123,10 +191,16 @@ def eye(a, c, cx, flip=False, side=False):
         a.stroke([(cx + s * (w / 2 + 0.3), cy - h / 2 + 0.4), (cx + s * (w / 2 + 1.1), cy - h / 2 + 1.1)], c['lash'], 0.6)
 
 
-def bangs(a, c, x0, x1, tips, top=12, base=21.6):
+def bangs(a, c, x0, x1, tips, top=12, base=21.6, face=None):
     shapes = [('r', x0, top, x1, base)]
     for tx0, tx1, y in tips:
         shapes.append(('p', [(tx0, base - 0.5), (tx1, base - 0.5), ((tx0 + tx1) / 2, y)]))
+    if isinstance(a, Pixel) and face is not None:
+        # ドット絵では、前髪の輪郭は顔と接するところ（毛先）にだけ引く（頭の中に四角い線が出ないように）
+        m = a.part(shapes, c['hair1'], c['hair2'])
+        ring = ImageChops.subtract(m.filter(ImageFilter.MaxFilter(3)), m)
+        a.tint(ImageChops.multiply(ring, face), c['hairLine'], 1.0)
+        return m
     return a.part(shapes, c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'], lw=0.7)
 
 
@@ -138,7 +212,10 @@ def head(a, c, side):
         hm = a.part([('e', -15.6, 5 if girl else 4, 15.6, 33.4)], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         if not girl:
             a.part([('p', [(x - 3, 30), (x + 3, 30), (x, 34)]) for x in (-8, -3, 3, 8)], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
-        a.clip(hm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.45, blur=0.6)
+        if isinstance(a, Pixel):
+            a.stroke([(-10, 10), (-6, 8), (-1, 8)], c['hairL'])
+        else:
+            a.clip(hm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.45, blur=0.6)
         return
     if side == 'left':
         if girl:
@@ -146,9 +223,15 @@ def head(a, c, side):
         hm = a.part([('e', -14.6, 5 if girl else 4, 15, 33)], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
         fm = a.part([('e', -15.4, 15.6, 3.6, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
         a.clip(fm, [('r', -16, 20, 4, 24.4)], c['skinS'], 0.5, blur=0.8)
-        bangs(a, c, -15.2, 3, [(-15.6, -11.6, 25), (-12.4, -8.4, 24), (-9, -5, 25.2), (-5.6, -1.6, 23.6), (-2, 2.6, 24.4)])
-        a.part([('p', [(4.6, 14), (14.4, 14), (14, 28.4), (8.6, 32.4), (5.6, 26)])], c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'], lw=0.7)
-        a.clip(hm, [('e', -8, 8.4, 6, 11.6)], c['hairL'], 0.45, blur=0.6)
+        bangs(a, c, -15.2, 3, [(-15.6, -11.6, 25), (-12.4, -8.4, 24), (-9, -5, 25.2), (-5.6, -1.6, 23.6), (-2, 2.6, 24.4)], face=fm)
+        sideline = None if isinstance(a, Pixel) else c['hairLine']
+        sm = a.part([('p', [(4.6, 14), (14.4, 14), (14, 28.4), (8.6, 32.4), (5.6, 26)])], c['hair1'], c['hair2'], shade=None if isinstance(a, Pixel) else c['hair2'], line=sideline, lw=0.7)
+        if isinstance(a, Pixel):
+            a.tint(ImageChops.multiply(ImageChops.subtract(sm.filter(ImageFilter.MaxFilter(3)), sm), fm), c['hairLine'], 1.0)
+        if isinstance(a, Pixel):
+            a.stroke([(-6, 9), (-2, 7), (3, 7)], c['hairL'])
+        else:
+            a.clip(hm, [('e', -8, 8.4, 6, 11.6)], c['hairL'], 0.45, blur=0.6)
         eye(a, c, -10.4, side=True)
         if girl:
             a.blob(-13.4, 29.8, -10, 31.4, c['blush'], 0.45, 0.6)
@@ -167,11 +250,11 @@ def head(a, c, side):
     fm = a.part([('e', -10.4, 15.6, 10.4, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], sh=(1.2, 1.4), sb=1.0, line=c['skinLine'], lw=0.6)
     a.clip(fm, [('r', -11, 20, 11, 24.4)], c['skinS'], 0.5, blur=0.8)
     tips = [(-12, -7.6, 25.4), (-8.4, -4, 24.2), (-4.6, -0.2, 25.6), (-0.8, 3.6, 23.8), (3, 7.4, 25), (6.8, 11.6, 25.8)]
-    bm = bangs(a, c, -12.4, 12.4, tips)
-    for s in (-1, 1):  # 顔の横の髪
-        a.part([('p', [(s * 15.4, 16), (s * 10.6, 16), (s * 10.2, 30), (s * 12.4, 33.4), (s * 15, 26)])], c['hair1'] if s < 0 else c['hair2'], c['hair2'], line=c['hairLine'], lw=0.6)
-    a.clip(hm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.45, blur=0.6)
-    a.clip(bm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.3, blur=0.6)
+    bm = bangs(a, c, -12.4, 12.4, tips, face=fm)
+    if girl:
+        for s in (-1, 1):  # 顔の横の髪（女子だけ、細め）
+            a.part([('p', [(s * 15.4, 16), (s * 11.8, 16), (s * 11.4, 30), (s * 12.8, 33), (s * 15, 26)])], c['hair1'] if s < 0 else c['hair2'], c['hair2'], line=c['hairLine'], lw=0.6)
+    a.clip(hm, [('e', -11, 8.4, 1, 11.6)], c['hairL'], 0.45, blur=0.6) if not isinstance(a, Pixel) else a.stroke([(-10, 10), (-6, 8), (-1, 8)], c['hairL'])
     eye(a, c, -5, flip=False)
     eye(a, c, 5, flip=True)
     if girl:
@@ -182,15 +265,18 @@ def head(a, c, side):
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
 
 
+Art = Pixel  # 塗り方：Pixel（くっきりしたドット絵）／Chibi（イラストを縮めた柔らかい塗り）
+
+
 def frame(ch, d, step):
     c = colors(ch)
     side = 'left' if d in ('left', 'right') else d
-    a = Chibi()
+    a = Art()
     body(a, c, side, step, side == 'up')
-    up = Chibi()
+    up = Art()
     head(up, c, side)
     im = a.im
-    bob = 0 if step == 1 else round(0.6 * SS)
+    bob = 0 if step == 1 else (1 if Art is Pixel else round(0.6 * SS))
     im.alpha_composite(up.im, (0, bob))
     a.im = im
     out = a.shrink()
