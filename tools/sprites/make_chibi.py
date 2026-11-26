@@ -243,6 +243,44 @@ def bangs(a, c, x0, x1, tips, top=12, base=21.6, face=None):
     return a.part(shapes, c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'], lw=0.7)
 
 
+def face_shade(a, c, m, hw_top=9):
+    """顔の上下と左右の明暗を1ドットずつ塗る（立体感）。
+    上から：前髪の下は中間色 → 目の下から頬（29〜31行）がいちばん明るい → 32〜33行は中間色 → あごの段は影色。
+    左右の端は内側へ 濃い影→影→（頬の段はもう1段影）→中間色 と暗くなる"""
+    tone = {1: c['skin1'], 2: c['skin2'], 3: c['skinS'], 4: c['handO']}
+    px = m.load()
+    for Y in range(FH):
+        xs = [X for X in range(FW) if px[X, Y] > 127]
+        if not xs:
+            continue
+        L, R = min(xs), max(xs)
+        if Y <= 29:  # 目の高さまでは横の髪が顔の縁になる
+            L, R = max(L, CX - hw_top), min(R, CX + hw_top)
+        base = 2 if Y <= 27 else 1 if Y <= 31 else 2 if Y <= 33 else 3
+        if Y == 28 and abs(xs[0] + xs[-1] - 2 * CX) <= 1:
+            base = 2
+        for X in xs:
+            if X < L or X > R:
+                continue
+            d = min(X - L, R - X) + 1
+            t = base
+            if d == 1:
+                t = max(t, 4 if Y >= 31 else 3)
+            elif d == 2:
+                t = max(t, 3)
+            elif d == 3:
+                t = max(t, 3 if Y in (30, 31) else 2)
+            elif d == 4 and Y in (30, 31):
+                t = max(t, 2)
+            if Y == 28 and abs(X - CX) <= 1:
+                t = max(t, 2)
+            a.im.putpixel((X, Y), rgb_t(tone[t]))
+
+
+def rgb_t(c):
+    return tuple(c[:3]) + (255,)
+
+
 def head(a, c, side):
     girl = c['girl']
     if side == 'up':
@@ -274,7 +312,7 @@ def head(a, c, side):
         eye(a, c, -10.4, side=True)
         if girl:
             a.blob(-13.4, 29.8, -10, 31.4, c['blush'], 0.45, 0.6)
-        a.dots(-14, 30, ['n'], {'n': c['skinS']})  # 鼻（点）
+        a.dots(-14, 31, ['n'], {'n': c['skinS']})  # 鼻（点）
         if girl:
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         if not girl:
@@ -287,6 +325,8 @@ def head(a, c, side):
     if not girl:
         a.part([('p', [(-11, 10), (-13, 6.4), (-6, 8)]), ('p', [(-2, 7.4), (0, 3.6), (2.4, 7.2)]), ('p', [(8, 9), (13, 6.6), (12, 12)])], c['hair1'], c['hair2'], line=c['hairLine'], lw=0.6)
     fm = a.part([('e', -10.4, 15.6, 10.4, 33.6)], c['skin1'], c['skin2'], shade=c['skinS'], sh=(1.2, 1.4), sb=1.0, line=c['skinLine'], lw=0.6)
+    if isinstance(a, Pixel):
+        face_shade(a, c, fm)
     tips = [(-12.4, -8.2, 25), (-8.8, -4.6, 24.6), (-4.6, -1.8, 22.2), (-1.6, 1.6, 20.6), (1.8, 4.6, 22.2), (4.6, 8.8, 24.6), (8.2, 12.4, 25)]  # 毛先は目の上端まで。真ん中だけ短く額が見える
     bm = bangs(a, c, -12.4, 12.4, tips, base=18, face=fm)
     for s in (-1, 1):  # 顔の横の髪：目の外側の端から あごの近くまで顔を縁取る
@@ -299,7 +339,7 @@ def head(a, c, side):
     if girl:
         a.blob(-8.6, 29.8, -4.8, 31.4, c['blush'], 0.45, 0.6)
         a.blob(4.8, 29.8, 8.6, 31.4, c['blush'], 0.45, 0.6)
-    a.dots(0, 30, ['n'], {'n': c['skinS']})  # 鼻（点）。口は省く
+    a.dots(0, 31, ['n'], {'n': c['skinS']})  # 鼻（点）。口は省く
     if girl:
         a.part([('p', [(6.4, 9), (10, 7.4), (10.8, 9.2), (7.2, 10.8)])], c['ribbon1'], c['ribbon2'], lw=0.4)
 
