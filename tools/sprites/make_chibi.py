@@ -117,6 +117,17 @@ CHARS = {
         'top1': '#FFF9F3', 'top2': '#e8ddd2', 'topLine': '#8a7c70', 'inner': '#FFF9F3', 'ribbon1': '#34343C', 'ribbon2': '#1e1e24',
         'low1': '#FFF9F3', 'low2': '#e8ddd2', 'leg': '#FFE0D5', 'shoe1': '#6a4a3a', 'shoe2': '#3a2418',
     }),
+    # ---- かなで：ユーザーの指定（胸までのまっすぐなラベンダーグレーの髪、額を覆うまっすぐな前髪、横長のアーモンド形の目、
+    # 桃色のブラウスに濃い灰色のジャンパースカート（太い肩ひも・ウエストの帯・足首までの長いスカート）、白い靴下、濃い灰色のブーツ）
+    'kanade_chibi': dict(BASE, girl=True, eye='almond', long=True, long_len=39, bangs='straight', pinafore=True, longskirt=True,
+                         pleats=False, tie=False, hairclip=False,
+                         tones=['#b9abc0', '#A495AB', '#8A7A95', '#5A5466', '#49484D'], **{
+        'skin1': '#FFFAF6', 'skin2': '#FFF3EB', 'skinS': '#F5C3BF', 'handO': '#C7A8BA', 'skinLine': '#8a6a78',
+        'hair1': '#8A7A95', 'hair2': '#5A5466', 'hairL': '#A495AB', 'hairLine': '#3a3640',
+        'lash': '#514A50', 'iris1': '#46556F', 'iris2': '#7188B0', 'iris3': '#A9BBD7',
+        'top1': '#F4DCEA', 'top2': '#C6A8B9', 'topLine': '#8e7484', 'inner': '#FCF2F8', 'ribbon1': '#626167', 'ribbon2': '#49484D',
+        'low1': '#626167', 'low2': '#49484D', 'legColor': '#C3CCDB', 'leg': '#C3CCDB', 'shoe1': '#6C6468', 'shoe2': '#524748',
+    }),
     'sota_chibi': dict(BASE, girl=False, eye='tsuri', **{
         'hair1': '#a87a4a', 'hair2': '#5a3a1e', 'hairL': '#d0a470', 'hairLine': '#2e1c0c',
         'iris1': '#1d3f7a', 'iris2': '#3a6ec0', 'iris3': '#a8c8f0',
@@ -160,13 +171,17 @@ def body(a, c, side, step, back):
         a.dots(sw, 38, ['.oKo.', 'oLMKo', 'oMMKo', 'oKdKE', '.EEE.'], {'o': c['handO'], 'd': c['handO'], 'E': c['line'], 'K': c['skinS'], 'L': c['skin2'], 'M': c['skin1']})
         if girl and c.get('tie', True):
             a.part([('p', [(-5, 36.4), (-3, 36.4), (-4, 38.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
+        if c.get('pinafore'):  # 肩ひもとウエストの帯
+            a.dots(-3, 35, ['kppk'] * 4, {'p': c['low1'], 'k': c['line']})
+            a.dots(-7, 39, ['kPPPPPPPPPPk'], {'P': c['low2'], 'k': c['line']})
         if c.get('sleeves'):  # 長い袖：手の上の2段を袖口で覆う
             a.dots(sw, 38, ['cCcCc', '.cCc.'], {'c': c['top2'], 'C': c['top1']})
         feet(a, c, 'side', step)
         return
     # 正面。あごの下（35行）から なで肩で始まり、下へ広がる
     if girl:
-        a.part([('p', [(-5.6, 38.4), (5.6, 38.4), (7.8, 43.6), (-7.8, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        hem = 44.6 if c.get('longskirt') else 43.6
+        a.part([('p', [(-5.6, 38.4), (5.6, 38.4), (7.8 + hem - 43.6, hem), (-7.8 - hem + 43.6, hem)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         for x, y0 in ((-2, 41), (2, 41), (-5, 42), (5, 42)) if c.get('pleats', True) else ():  # スカートの折り目：下半分に、地より濃い縦の線
             a.dots(x, y0, ['p'] * (44 - y0), {'p': c['low2']})
     else:  # ズボンは3段（41〜44行）、股の線
@@ -188,6 +203,11 @@ def body(a, c, side, step, back):
             a.clip(m, [('r', -0.2, 37.4, 0.2, 40.4)], c['topLine'], 0.7)
     if not girl:
         a.dots(-5, 41, ['bbbbbbbbbbb'], {'b': c['ribbon1']})  # ベルト（1段）
+    if c.get('pinafore'):  # ジャンパースカート：ブラウスの上に、太い肩ひも2本とウエストの帯
+        pf = {'p': c['low1'], 'P': c['low2'], 'k': c['line']}
+        for x0 in (-5, 2):
+            a.dots(x0, 35, ['kppk'] * 4, pf)
+        a.dots(-7, 39, ['kPPPPPPPPPPPPk'[:15]], pf)
     hands(a, c)
     if c.get('sleeves'):  # 長い袖：手の上の2段を袖口で覆う（うね編みの縞）
         for x0, row in ((-12, ['.cCcCc', '..cCc.']), (7, ['cCcCc.', '.cCc..'])):
@@ -265,7 +285,7 @@ def walk_side(a, c, step):
 def feet(a, c, side, step):
     """手本どおり：左右の足は幅5ドット（輪郭＋中身3）で間に1ドットのすき間。脚1ドット・靴2ドット（上が明るく下が暗い）。
     歩くと上げた足が1ドット上がる"""
-    leg = c['skin2'] if c['girl'] else c['low1']  # 女子は素足（肌色）
+    leg = c.get('legColor') or (c['skin2'] if c['girl'] else c['low1'])  # 女子は素足（肌色）。legColor で靴下などに
     pal = {'o': c['line'], 'l': leg, 's': c['shoe1'], 'd': c['shoe2']}
     foot = ['olllo', 'ossso', 'odddo']
     if side == 'front':
@@ -275,7 +295,7 @@ def feet(a, c, side, step):
     else:
         # 横向き：脚1段＋靴1段の2段だけ（46・47行）。靴は脚より1ドット前に出たつま先で表す。輪郭は黒ではなく靴の暗い色
         girl = c['girl']
-        pal = {'o': c['shoe2'], 'L': c['skin2'] if girl else c['low1'], 'l': c['skinS'] if girl else c['low2'],
+        pal = {'o': c['shoe2'], 'L': c.get('legColor') or (c['skin2'] if girl else c['low1']), 'l': c.get('legColor') or (c['skinS'] if girl else c['low2']),
                'S': c['shoe1'], 's': c['shoe2']}
         front = ('oLLo', 'oSSo')    # 前の足：脚 x0..x0+3、靴は1ドット前（x0−1..x0+2）
         back = ('llls', 'SSSso')    # 後ろの足：奥なので脚は暗め、靴は x0−1..x0+3
@@ -313,6 +333,9 @@ EYE_TYPES = {
     # しっかりたれ目：目頭側が高く、目尻のまつげが2段下まで垂れる。横向きは上まぶたの線が目尻へ下がる
     'tare2': (['..EEE', '.EiiE', 'EiPiw', 'wIPIw', '.KKK.'],   # 上まつげは目頭の上の段から目尻へ1段ずつ下がる斜めの線
               ['ooo...', 'oEEoo.', '.IEggo', '.EDwgo', '.EIwgE', '.LLw..']),
+    # アーモンド：横長で縦に1段細い。上まつげは目の幅いっぱいのはっきりした線、下まぶたは薄く
+    'almond': (['EEEEE', 'giPiw', 'wIPIw', '.KKK.'],
+               ['ooooo.', 'oEEEEo', '.IEgg4', '.EDwg4', '.LLw..', '......']),
     # つり目：目尻のまつげが上がり、縦に1段細い。きりっとした印象
     'tsuri': (['EE...', '.EEEE', 'giPiw', 'wIPIw', '.KKK.'],
               ['oooooE', 'oEEoE.', '.IEgg4', '.EDwg4', '.LLw..', '......']),
@@ -519,11 +542,13 @@ def long_shade(im, c, side):
 def long_hair_back(c, side):
     """太ももまでの長い後ろ髪（体より先に描く層）"""
     a = Art()
+    L = c.get('long_len', 44)   # 毛先の行（44＝太もも、39＝胸のあたり）
+    d = 44 - L
     if side == 'down':
-        a.part([('p', [(-15.6, 16), (15.6, 16), (16.6, 38), (14.4, 43.6), (11, 42.4), (8, 44), (-8, 44), (-11, 42.4), (-14.4, 43.6), (-16.6, 38)])],
+        a.part([('p', [(-15.6, 16), (15.6, 16), (16.6, 38 - d), (14.4, 43.6 - d), (11, 42.4 - d), (8, L), (-8, L), (-11, 42.4 - d), (-14.4, 43.6 - d), (-16.6, 38 - d)])],
                c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
     else:  # 横向き：背中側に流れる
-        a.part([('p', [(1, 14), (15.6, 14), (16.4, 34), (15.6, 41), (12.4, 44), (9.6, 41.6), (6, 43.6), (3.4, 36), (3, 30)])],
+        a.part([('p', [(1, 14), (15.6, 14), (16.4, 34 - d), (15.6, 41 - d), (12.4, L), (9.6, 41.6 - d), (6, 43.6 - d), (3.4, 36 - d), (3, 30)])],
                c['hair1'], c['hair2'], shade=c['hair2'], line=c['hairLine'])
     return a
 
@@ -589,6 +614,8 @@ def head(a, c, side):
     if isinstance(a, Pixel):
         face_shade(a, c, fm)
     tips = [(-12.4, -8.2, 25), (-8.8, -4.6, 24.6), (-4.6, -1.8, 22.2), (-1.6, 1.6, 20.6), (1.8, 4.6, 22.2), (4.6, 8.8, 24.6), (8.2, 12.4, 25)]  # 毛先は目の上端まで。真ん中だけ短く額が見える
+    if c.get('bangs') == 'straight':  # まっすぐな前髪：額を覆い、両目の間に少し長い毛束
+        tips = [(-12.4, -8.2, 25), (-8.8, -4.6, 24.6), (-4.6, -1.8, 24.2), (-1.6, 1.6, 25.8), (1.8, 4.6, 24.2), (4.6, 8.8, 24.6), (8.2, 12.4, 25)]
     bm = bangs(a, c, -12.4, 12.4, tips, base=18, face=fm)
     for s in (-1, 1):  # 顔の横の髪：目の外側の端から あごの近くまで顔を縁取る
         pts = [(s * 15.4, 16), (s * 9.6, 18), (s * 9.6, 29), (s * 11.2, 33.4), (s * 15, 28)] if girl else \
@@ -831,12 +858,13 @@ def back_frame(c, step):
                     if ch != '.':
                         im.putpixel((CX + x0 + i, y0 + j), rb[ch] + (255,))
         if c.get('long'):  # 太ももまでの長い後ろ髪：背中を覆う縦の束（手は見えるように肩より下は細く）
-            for Y in range(28 + o, 45):
+            L = c.get('long_len', 44)
+            for Y in range(28 + o, L + 1):
                 hw = 15 if Y < 33 + o else 13 if Y < 37 + o else 10
                 for x in range(-hw, hw + 1):
-                    if Y >= 43 and (x + Y) % 2:
+                    if Y >= L - 1 and (x + Y) % 2:
                         continue  # 毛先はギザギザ
-                    edge = abs(x) == hw or Y == 44
+                    edge = abs(x) == hw or Y == L
                     ch = 'E' if edge else 'D' if x % 3 == 0 else ('L' if x < -5 and Y < 34 + o else 'M')
                     put(x, Y, [ch])
         if c.get('ahoge'):
