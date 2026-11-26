@@ -6,7 +6,7 @@
   try {
     await Promise.race([
       Promise.all([document.fonts.load(G.font(26), 'あA1'), document.fonts.load(G.font(26, true), 'あA1')]),
-      new Promise((r) => setTimeout(r, 2500)),
+      new Promise((r) => setTimeout(r, 5000)),
     ]);
   } catch (e) { /* 字体が読めなくても動かす */ }
   await G.loadTilesets();

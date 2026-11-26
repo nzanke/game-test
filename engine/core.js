@@ -15,9 +15,9 @@
     defineDoors(o) { this.data.doors = Object.assign(this.data.doors || {}, o); },
     // 生成したマップなどに、あとからイベントを足す
     addEvents(mapId, evs) { const e = (this.data.extraEvents = this.data.extraEvents || {}); (e[mapId] = e[mapId] || []).push(...evs); },
-    // 半角英数は BIZ UDGothic（index.html で英数字だけ読み込む）、それ以外は BIZ UDPGothic
+    // ゲームの文字は M+ 1m（fonts/mplus-1m-regular.ttf。css/style.css で読み込む）
     font(size, bold) {
-      return `${bold ? 'bold ' : ''}${size}px "BIZ UDGothic","BIZ UDPGothic",sans-serif`;
+      return `${bold ? 'bold ' : ''}${size}px "M+ 1m",sans-serif`;
     },
   });
 

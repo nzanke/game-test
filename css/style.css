@@ -1,6 +1,12 @@
+/* ゲームの文字：M+ 1m（M+ FONTS。自由に使用・改変・配布できるフォント） */
+@font-face {
+  font-family: "M+ 1m";
+  src: url("../fonts/mplus-1m-regular.ttf") format("truetype");
+  font-display: block;
+}
 html, body {
   margin: 0; height: 100%; background: #111; color: #eee; overflow: hidden;
-  font-family: "BIZ UDGothic", "BIZ UDPGothic", sans-serif;
+  font-family: "M+ 1m", sans-serif;
   touch-action: none; -webkit-user-select: none; user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
