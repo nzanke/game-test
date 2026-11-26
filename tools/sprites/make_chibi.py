@@ -121,6 +121,8 @@ def body(a, c, side, step, back):
         sw = {0: -1.6, 1: 0, 2: 1.6}[step]
         if girl:
             a.part([('p', [(-5.8, 37.4), (5.8, 37.4), (7.6, 43.6), (-7.6, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+            for x in (-3, 1, 5):  # 折り目
+                a.dots(x, 41 if x != 5 else 42, ['p'] * (3 if x != 5 else 2), {'p': c['low2']})
         else:
             a.part([('p', [(-4.2, 38.6), (4.2, 38.6), (4.4, 43.6), (-4.4, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         a.part([('p', [(-3.8, 35.4), (4, 35.4), (4.4, 40.4), (-4.2, 40.4)]), ('e', -6.4, 33, 6.4, 38.2)], c['top1'], c['top2'], shade=c['top2'], line=c['topLine'], lw=0.7)
@@ -133,6 +135,8 @@ def body(a, c, side, step, back):
     # 正面。あごの下（35行）から なで肩で始まり、下へ広がる
     if girl:
         a.part([('p', [(-5.6, 38.4), (5.6, 38.4), (7.8, 43.6), (-7.8, 43.6)])], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
+        for x, y0 in ((-2, 41), (2, 41), (-5, 42), (5, 42)):  # スカートの折り目：下半分に、地より濃い縦の線
+            a.dots(x, y0, ['p'] * (44 - y0), {'p': c['low2']})
     else:  # ズボンは3段（41〜44行）、股の線
         a.part([('r', -5.6, 40.6, 5.6, 44.6)], c['low1'], c['low2'], shade=c['low2'], line=c['line'], lw=0.7)
         a.dots(0, 43, ['o', 'o'], {'o': c['line']})
