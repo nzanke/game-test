@@ -19,7 +19,7 @@ G.defineSystem({
   // 最初にいる場所
   start: { map: 'room1', x: 2, y: 6, dir: 'up' },
   // 主人公
-  player: { name: 'ハル', char: { sprite: 'img/chars/haru.png' } },
+  player: { name: 'ハル', char: { sprite: 'img/chars/haru_chibi.png' } },
   // セーブ（ブラウザに保存）
   saveKey: 'game-test',
   saveSlots: 3,
