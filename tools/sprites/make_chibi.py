@@ -90,7 +90,7 @@ class Pixel(Chibi):
 
 BASE = {
     'skin1': '#fbdcc8', 'skin2': '#f6bf9c', 'skinS': '#e2916f', 'skinLine': '#5a2c20', 'blush': '#ff8f96',
-    'eyeW': '#ffffff', 'handO': '#97502c', 'lash': '#1a0f1c', 'mouth': '#c85a5e', 'line': '#2a1e2a',
+    'eyeW': '#ffffff', 'handO': '#97502c', 'earO': '#7a3c20', 'lash': '#1a0f1c', 'mouth': '#c85a5e', 'line': '#2a1e2a',
 }
 CHARS = {
     'yui_chibi': dict(BASE, girl=True, **{
@@ -287,7 +287,7 @@ def face_shade(a, c, m, hw_top=9):
 
 # ---- 横向きは「行ごとの前端・後端の表」で形を決める（手本をドット単位で測った値をそのまま書ける）
 # 横顔：(前端, 後端)。27〜28行が鼻筋（−12）、29〜31行で1ドット前に出て鼻（−13）、32行で輪郭1ドット分引っ込んで あごへ
-FACE_SIDE = {**{y: (-9, 2) for y in range(16, 23)}, 23: (-10, 2), 24: (-10, 2), 25: (-11, 2), 26: (-11, 2),
+FACE_SIDE = {**{y: (-9, -1) for y in range(16, 23)}, 23: (-10, 2), 24: (-10, 2), 25: (-11, 2), 26: (-11, 2),
              27: (-12, 2), 28: (-12, 2), 29: (-13, 3), 30: (-13, 3), 31: (-13, 3), 32: (-11, 3), 33: (-10, 3), 34: (-8, 2)}
 FACE_SIDE_LINE = [(-12, 32), (-11, 33), (-10, 34), (-9, 34)] + [(x, 35) for x in range(-8, 4)]  # あごの下だけ濃い輪郭（前の縁は輪郭なし）
 # 横向きの胴：上は細く、前の縁を斜めに下へ広げて、下半身の広さとの落差を出す
@@ -378,9 +378,9 @@ def head(a, c, side):
             fm = a.part([('e', -12.6, 16, 2.8, 34.6)], c['skin1'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
         bangs(a, c, -15.2, 3, [(-16, -12.4, 25.4), (-12.6, -9, 23.4), (-9.2, -5.6, 24.2), (-5.8, -2.4, 23), (-2.6, 1, 22.4)], base=18, face=fm)
         # 耳（顔の後ろ）
-        a.part([('e', 1, 23.6, 4.6, 29.6)], c['skin2'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
+        if not isinstance(a, Pixel):
+            a.part([('e', 1, 23.6, 4.6, 29.6)], c['skin2'], c['skin2'], shade=c['skinS'], line=c['skinLine'], lw=0.6)
         if isinstance(a, Pixel):
-            a.dots(3, 25, ['3', '4'], {'3': c['skinS'], '4': c['handO']})
             a.stroke([(-6, 9), (-2, 7), (3, 7)], c['hairL'])
         else:
             a.clip(hm, [('e', -8, 8.4, 6, 11.6)], c['hairL'], 0.45, blur=0.6)
@@ -495,6 +495,63 @@ def hair_shade(im, c, side):
             px[X, Y] = T[t] + (255,)
 
 
+# ---- 横向きの耳のまわり（手本を1ドットずつ測った作りを表にしたもの。左端の列 x、23行から）
+# 1〜4 肌（明・中・影・濃い影）／# 濃い輪郭／o 耳の縁の茶色／H 髪（髪でなければ中間の髪色で塗る）／S 髪の影の色／_ 透明／. そのまま
+EAR_SIDE_BOY = (-2, 23, [
+    'SHH.#ooo....',
+    'SHH.#434o...',
+    'SHH#o312o...',
+    'SHH#4312#...',
+    'SH#43324#...',
+    '##33334#S...',
+    '33333##SS...',
+    '223334SS....',
+    '223334SS....',
+    '233334SSS...',
+    '333344SSS###',
+    '33344##SSSS_',
+    '#####__####_',
+])
+EAR_SIDE_GIRL = (-4, 23, [
+    'SHHHHSHooo....',
+    'SHHHH#o434o...',
+    'SHHHH#o312o...',
+    'SHHHH#4312#...',
+    'SHHHS#3324#...',
+    'SHHH#4334#S...',
+    'SHHH#43##SS...',
+    'SHHS#334SS....',
+    'SHH#4334SS....',
+    'SHS#4334SS....',
+    'SH#44444SSSSS.',
+])
+
+
+def ear_side(im, c):
+    girl = c['girl']
+    x0, y0, rows = EAR_SIDE_GIRL if girl else EAR_SIDE_BOY
+    if girl:
+        hairs = {rgb(h) for h in HAIR_TONES}
+        mid, dark = rgb(HAIR_TONES[2]), rgb(HAIR_TONES[4])
+    else:
+        hairs = {tuple(c[k][:3]) for k in ('hair1', 'hair2', 'hairL')}
+        mid, dark = tuple(c['hair1'][:3]), tuple(c['hair2'][:3])
+    pal = {'1': c['skin1'], '2': c['skin2'], '3': c['skinS'], '4': c['handO'], '#': c['line'], 'o': c['earO'], 'S': dark}
+    px = im.load()
+    for j, row in enumerate(rows):
+        for i, ch in enumerate(row):
+            X, Y = CX + x0 + i, y0 + j
+            if ch == '.':
+                continue
+            if ch == '_':
+                px[X, Y] = (0, 0, 0, 0)
+            elif ch == 'H':
+                if px[X, Y][3] < 128 or tuple(px[X, Y][:3]) not in hairs:
+                    px[X, Y] = mid + (255,)
+            else:
+                px[X, Y] = tuple(pal[ch][:3]) + (255,)
+
+
 Art = Pixel  # 塗り方：Pixel（くっきりしたドット絵）／Chibi（イラストを縮めた柔らかい塗り）
 
 
@@ -507,6 +564,8 @@ def frame(ch, d, step):
     head(up, c, side)
     if c['girl'] and Art is Pixel:
         hair_shade(up.im, c, side)
+    if side == 'left' and Art is Pixel:
+        ear_side(up.im, c)
     im = a.im
     bob = 0 if step == 1 else (1 if Art is Pixel else round(0.6 * SS))
     im.alpha_composite(up.im, (0, bob))
