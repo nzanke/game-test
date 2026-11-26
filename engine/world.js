@@ -432,7 +432,7 @@
         if (!this.live(e) || e.def.sensor === false || e.page.sensor === false) continue;
         const tr = e.page.trigger || 'action';
         if ((tr !== 'action' && tr !== 'touch') || !e.page.list || !e.page.list.length) continue;
-        if (Math.abs(e.char.x - p.x) + Math.abs(e.char.y - p.y) > dist) continue;
+        if (!(cfg && cfg.always) && Math.abs(e.char.x - p.x) + Math.abs(e.char.y - p.y) > dist) continue;  // always：距離に関係なく出す
         const x = e.char.rx + T / 2, y = e.char.ry - 6 + Math.sin(G.frame / 8) * 3;
         ctx.globalAlpha = 0.65 + 0.35 * Math.sin(G.frame / 10);
         ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2);

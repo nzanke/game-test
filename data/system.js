@@ -1,7 +1,7 @@
 // system.js — ゲーム全体の設定
 G.defineSystem({
   title: '放課後の教室',
-  subtitle: 'ひと部屋の脱出ゲーム',
+  subtitle: '（システムとデザインの試作）',
   // タイトル画面の下に出す表示（素材の著作権表示など）
   credits: ['タイル素材：ドット絵世界'],
   // 画面の配置（画面は816×624）。map：地図の枠、message：文章の枠、portrait：立ち絵の枠、gauge：右端のゲージ
@@ -10,15 +10,15 @@ G.defineSystem({
     map: { x: 14, y: 14, w: 518, h: 432 },
     message: { x: 14, y: 456, w: 518, h: 156 },
     portrait: { x: 440, y: 0, w: 330, h: 624, default: 'かなで' },  // default：だれも話していないときに出す人
-    gauge: { x: 787, y: 12, h: 604, var: 'clues', max: 3 },  // var の変数の値だけ満ちる（見つけた手がかりの数）
+    gauge: { x: 787, y: 12, h: 604, var: 'affection', max: 100 },  // var の変数の値だけ満ちる
   },
   // 立ち絵。img に画像（下そろえで枠の高さに合わせる）を書く。img がないと仮の人影
   portraits: {
     'ぼたん': { color: '#d99da6' },
-    'かなで': { color: '#8a7a95' },
+    'かなで': { color: '#8a7a95' /* , img: 'img/portraits/kanade.png' ← 立ち絵の画像ができたらここに */ },
   },
   // 最初にいる場所
-  start: { map: 'escape', x: 7, y: 4, dir: 'right' },
+  start: { map: 'escape', x: 7, y: 6, dir: 'right' },
   // 主人公
   player: { name: 'ぼたん', char: { sprite: 'img/chars/botan_chibi.png' } },
   // セーブ（ブラウザに保存）
@@ -29,7 +29,7 @@ G.defineSystem({
   // Qキー（スマホは★）で呼ぶコモンイベント
   specialKey: 'hint',
   // 近くの調べられるものを「！」で知らせる（false で無効）
-  sensor: { distance: 2 },
+  sensor: { always: true },  // always：距離に関係なく出す（distance: 2 なら2マス以内だけ）
   // 全マップ共通のマス記号。tile: [素材ID, 列, 行]（列を配列にすると横に並べたとき順に使い分ける）
   legend: {
     '#': { solid: true, color: '#2b2733' },                       // 外側（暗い所）

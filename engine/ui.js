@@ -133,7 +133,9 @@
       if (im) { // 画像は枠の高さに合わせ、下そろえ・左右中央
         const k = Math.min(P.h / im.height, P.w / im.width);
         const w = im.width * k, h = im.height * k;
+        ctx.save(); ctx.imageSmoothingEnabled = false;  // ドット絵の立ち絵がぼやけないように
         ctx.drawImage(im, P.x + (P.w - w) / 2, P.y + P.h - h, w, h);
+        ctx.restore();
         return;
       }
       // 仮の立ち絵（人影）
