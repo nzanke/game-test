@@ -14,7 +14,7 @@
 | `data/story.js` | 生成したマップに足すお話のイベント |
 | `data/tilesets/*.js` | タイル素材（画像として開けない形にしたもの） |
 
-マップを足したら、`index.html` の「データ」の所に `<script src="data/maps/○○.js"></script>` を1行足す。
+マップを足したら、`files.js` の scripts に `'data/maps/○○.js',` を1行足す（main.js より前）。
 
 ## マップ
 
@@ -75,7 +75,7 @@ G.addEvents('main1f', [
 
 素材は「ドット絵世界」の学校素材（`school_in` 室内、`school_out` 屋外。どちらも32pxのマスが8列）。
 規約で素材の二次配布が禁止されているので、**元の画像はリポジトリに入れない**。
-`python3 tools/encode_tileset.py 元の画像.png ID` で、画像として開けない形の `data/tilesets/ID.js` を作り、`index.html` に読み込みを足す。
+`python3 tools/encode_tileset.py 元の画像.png ID` で、画像として開けない形の `data/tilesets/ID.js` を作り、`files.js` に読み込みを足す。
 著作権表示は `system.js` の `credits`（タイトル画面に出る）。
 
 ## イベント

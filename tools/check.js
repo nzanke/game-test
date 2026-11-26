@@ -3,8 +3,9 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
-const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const scripts = [...html.matchAll(/<script src="([^"?]+)(\?[^"]*)?"/g)].map((m) => m[1]).filter((s) => !s.endsWith('main.js'));
+const fctx = { window: {} };
+vm.runInNewContext(fs.readFileSync(path.join(root, 'files.js'), 'utf8'), fctx);
+const scripts = fctx.window.FILES.scripts.filter((s) => !s.endsWith('main.js'));
 
 const ctx = vm.createContext({ console, Math, JSON });
 ctx.window = ctx;
@@ -13,9 +14,9 @@ const G = ctx.G, D = G.data;
 const errors = [], warns = [];
 const err = (where, msg) => errors.push(`${where}: ${msg}`);
 
-// index.html に入っていないマップファイル
+// files.js に入っていないマップファイル
 for (const f of fs.readdirSync(path.join(root, 'data/maps'))) {
-  if (f.endsWith('.js') && !scripts.includes('data/maps/' + f)) err('index.html', `data/maps/${f} が読み込まれていません`);
+  if (f.endsWith('.js') && !scripts.includes('data/maps/' + f)) err('files.js', `data/maps/${f} が読み込まれていません`);
 }
 
 const DEFAULT_LEGEND = ['#', '.', ' ', 'D'];
@@ -27,7 +28,7 @@ const TS = D.tilesets || {};
 function checkTile(ref, where, needSize) {
   if (!Array.isArray(ref) || ref.length < 3) return err(where, 'tile は [素材ID, 列, 行(, 幅, 高さ)] の形で');
   const [id, c, r, w = 1, h = 1] = ref, t = TS[id];
-  if (!t) return err(where, `素材「${id}」がありません（data/tilesets と index.html を確認）`);
+  if (!t) return err(where, `素材「${id}」がありません（data/tilesets と files.js を確認）`);
   for (const col of [].concat(c)) if (!(col >= 0 && col + w <= t.cols)) err(where, `素材「${id}」の列 ${col}（幅${w}）が範囲外です（0〜${t.cols - 1}）`);
   if (!(r >= 0 && r + h <= t.rows)) err(where, `素材「${id}」の行 ${r}（高さ${h}）が範囲外です（0〜${t.rows - 1}）`);
 }

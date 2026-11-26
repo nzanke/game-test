@@ -1,6 +1,6 @@
-// main.js — 起動（字体を読み込んでからタイトルへ）
+// main.js — 起動（字体を読み込んでからタイトルへ）。files.js の一覧の最後に読み込まれる
 'use strict';
-window.addEventListener('load', async () => {
+(async () => {
   const G = window.G;
   document.title = G.data.system.title || document.title;
   try {
@@ -12,4 +12,4 @@ window.addEventListener('load', async () => {
   await G.loadTilesets();
   G.start();
   G.goTitle();
-});
+})();
