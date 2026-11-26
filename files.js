@@ -2,7 +2,7 @@
 // マップなどを足したら scripts に1行足す（順番どおりに読み込む。main.js は最後）。
 // 版の番号 v は tools/stamp.py が書き換える。
 window.FILES = {
-  v: '20261127064100',
+  v: '20261127064517',
   scripts: [
     'engine/core.js',
     'engine/world.js',
