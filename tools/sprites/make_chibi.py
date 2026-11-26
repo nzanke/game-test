@@ -174,6 +174,62 @@ def hands(a, c):
     a.dots(7, 38, [r[::-1] for r in HAND], pal)
 
 
+# 横向きの歩き（コマ0・2）の足まわり：手本を1ドットずつ測った作り（x −10〜+7）。上の行から。
+# '#' 黒の輪郭／o d s S 靴（暗→明）／P p q Q ズボン・スカート（暗→明）／n g w k スカートの裾の色／1〜4 h 脚／_ 透明／. そのまま
+WALK_SIDE_BOY = {
+    0: (44, [
+        '__h##ppP#Ppp##h___',
+        '_od34###p###h3h#__',
+        '_oss344##h4323do__',
+        '__ooddod#odSSdo___',
+    ]),
+    2: (44, [
+        '____##qQqp##p##___',
+        '___oS2##p#Pp#4#___',
+        '___odS33####4o#___',
+        '____oddd#dssd#____',
+    ]),
+}
+WALK_SIDE_GIRL = {
+    0: (43, [
+        '___Ppp###ppqpqpP__',
+        '__PpppnppkwwkwgkP_',
+        '_#Pkkgkggpqqpqp##_',
+        '_o##npnpp#######__',
+        '__od#####osssd#___',
+    ]),
+    2: (43, [
+        '__Pppqqpqqpp#43#__',
+        '_#gwgwwkgk.pn##___',
+        '_####qqpqp.ggkP___',
+        '___os##########___',
+        '____dssd#oddd#____',
+    ]),
+}
+
+
+def walk_side(a, c, step):
+    """横向きの歩き（コマ0・2）の足まわりを表で描く。色はうちのズボン・スカート・靴・肌に置き換える"""
+    def mix(c1, c2, t):
+        return tuple(round(c1[i] * (1 - t) + c2[i] * t) for i in range(3))
+    s1, s2 = tuple(c['shoe1'][:3]), tuple(c['shoe2'][:3])
+    l1, l2 = tuple(c['low1'][:3]), tuple(c['low2'][:3])
+    pal = {'#': c['line'], 'o': mix(s2, (0, 0, 0), 0.35), 'd': s2, 's': mix(s1, s2, 0.5), 'S': s1,
+           'P': mix(l2, (0, 0, 0), 0.3), 'p': l2, 'q': l1, 'Q': mix(l1, (255, 255, 255), 0.3),
+           'n': l2, 'g': l1, 'w': mix(l1, (255, 255, 255), 0.35), 'k': l2}
+    if c['girl']:
+        pal.update({'1': c['skin1'], '2': c['skin2'], '3': c['skinS'], '4': c['handO'], 'h': c['handO'], 'O': c['handO'], 'D': c['skin2']})
+        y0, rows = WALK_SIDE_GIRL[step]
+    else:  # 手本の男子は素足だが、ハルは長ズボンなので脚はズボンの色
+        pal.update({'1': l1, '2': l1, '3': l1, '4': l2, 'h': l2})
+        y0, rows = WALK_SIDE_BOY[step]
+    for j, row in enumerate(rows):
+        for i, ch in enumerate(row):
+            if ch == '.':
+                continue
+            a.im.putpixel((CX - 10 + i, y0 + j), (0, 0, 0, 0) if ch == '_' else tuple(pal[ch][:3]) + (255,))
+
+
 def feet(a, c, side, step):
     """手本どおり：左右の足は幅5ドット（輪郭＋中身3）で間に1ドットのすき間。脚1ドット・靴2ドット（上が明るく下が暗い）。
     歩くと上げた足が1ドット上がる"""
@@ -192,6 +248,9 @@ def feet(a, c, side, step):
         front = ('oLLo', 'oSSo')    # 前の足：脚 x0..x0+3、靴は1ドット前（x0−1..x0+2）
         back = ('llls', 'SSSso')    # 後ろの足：奥なので脚は暗め、靴は x0−1..x0+3
         # (前の足の x, 上げ, 後ろの足の x, 上げ)。上げた足は1ドット上がる
+        if step != 1:  # 歩きのコマは手本の作りの表で描く
+            walk_side(a, c, step)
+            return
         fx, fu, bx, bu = {0: (-7, 1, 3, 0), 1: (-3, 0, 1, 0), 2: (-5, 0, 3, 1)}[step]
         for rows, x0, up in ((back, bx, bu), (front, fx, fu)):
             a.dots(x0, 46 - up, [rows[0]], pal)
