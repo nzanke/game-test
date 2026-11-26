@@ -6,7 +6,7 @@ G.addEvents('main1f', [
   {
     id: 'yui', at: '保健室', dx: -5, dy: 3, dir: 'left',
     pages: [
-      { char: { sprite: 'img/chars/yui.png' }, autoMove: ['wait:90', 'face:down', 'wait:90', 'face:left'], list: [
+      { char: { sprite: 'img/chars/trial.png' }, autoMove: ['wait:90', 'face:down', 'wait:90', 'face:left'], list: [
         ['text', 'ユイ', 'おはよう、ハル。カード探し、手伝ってくれるの？'],
         ['choice', ['もちろん', 'あとでね'], [
           [
@@ -22,10 +22,10 @@ G.addEvents('main1f', [
           ],
         ]],
       ] },
-      { cond: { self: 'A' }, char: { sprite: 'img/chars/yui.png' }, list: [
+      { cond: { self: 'A' }, char: { sprite: 'img/chars/trial.png' }, list: [
         ['text', 'ユイ', 'いま {v:cards} 枚だね。図書室は特別教室棟の3階だよ。'],
       ] },
-      { cond: [{ self: 'A' }, { var: ['cards', '>=', 3] }], char: { sprite: 'img/chars/yui.png' }, list: [
+      { cond: [{ self: 'A' }, { var: ['cards', '>=', 3] }], char: { sprite: 'img/chars/trial.png' }, list: [
         ['balloon', 'this', '♪'],
         ['text', 'ユイ', 'すごい、3枚そろったんだ！'],
         ['flash', [255, 240, 200], 40],
