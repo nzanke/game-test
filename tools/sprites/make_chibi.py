@@ -597,7 +597,7 @@ def head(a, c, side):
         eye(a, c, -6, side=True)  # 目の前端は x −8（鼻筋から肌4ドット後ろ）
         if girl:
             if c.get('cheek', True):
-                a.blob(-11.6, 30.8, -8.4, 32.4, c['blush'], 0.45, 0.6)
+                a.blob(-11.6, 31.8, -8.4, 33.4, c['blush'], 0.45, 0.6)
         if girl and c.get('hairclip', True):
             a.part([('p', [(6, 9.6), (9.6, 8), (10.4, 9.8), (6.8, 11.4)])], c['ribbon1'], c['ribbon2'], lw=0.4)
         extras(a, c, 'left')
@@ -626,8 +626,8 @@ def head(a, c, side):
     eye(a, c, 6, flip=True)
     if girl:
         if c.get('cheek', True):
-            a.blob(-8.6, 30.8, -4.8, 32.4, c['blush'], 0.45, 0.6)   # 頬の赤みは鼻（31行）と同じ高さに並べる
-            a.blob(4.8, 30.8, 8.6, 32.4, c['blush'], 0.45, 0.6)
+            a.blob(-8.6, 31.8, -4.8, 33.4, c['blush'], 0.45, 0.6)   # 頬の赤みは鼻（30〜31行）より下（32〜33行）
+            a.blob(4.8, 31.8, 8.6, 33.4, c['blush'], 0.45, 0.6)
     nose = c.get('nose', NOSE)
     ns = tuple(round(c['skin2'][i] * 0.5 + c['skinS'][i] * 0.5) for i in range(3))
     if nose == 'A':
@@ -645,7 +645,7 @@ def head(a, c, side):
     extras(a, c, 'down')
 
 
-NOSE = 'ABC'   # 鼻の描き方（dot＝真ん中の点／A＝薄い点／B＝中心の1ドット右に縦2ドットの薄い影／C＝1段上の点／ABC＝全部合わせる（いま使う））
+NOSE = 'B'   # 鼻の描き方（dot＝真ん中の点／A＝薄い点／B＝中心の1ドット右に縦2ドットの薄い影（いま使う）／C＝1段上の点／ABC＝全部合わせる）
 HAIR_TONES = ['#a3aee6', '#6873b0', '#454d84', '#30365e', '#1e2240']  # 女子の髪：光・明・中・暗・影
 
 
