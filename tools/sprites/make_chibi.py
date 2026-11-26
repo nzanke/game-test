@@ -159,7 +159,7 @@ def body(a, c, side, step, back):
 def feet(a, c, side, step):
     """手本どおり：左右の足は幅5ドット（輪郭＋中身3）で間に1ドットのすき間。脚2ドット・靴2ドット（上が明るく下が暗い）。
     歩くと上げた足が1ドット上がる"""
-    leg = c['leg'] if c['girl'] else c['low1']
+    leg = c['skin2'] if c['girl'] else c['low1']  # 女子は素足（肌色）
     pal = {'o': c['line'], 'l': leg, 's': c['shoe1'], 'd': c['shoe2']}
     foot = ['olllo', 'olllo', 'osssо'.replace('о', 'o'), 'odddo']
     if side == 'front':
